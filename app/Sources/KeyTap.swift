@@ -26,7 +26,7 @@ final class KeyTap {
         if type == .flagsChanged {
             let kc = event.getIntegerValueField(.keyboardEventKeycode)
             if kc == 56 || kc == 60 {
-                let down = event.flags.contains(.maskShift); if down { shiftDown[kc] = Date() } else if let start = shiftDown.removeValue(forKey: kc), Date().timeIntervalSince(start) <= 0.25 { let now = Date(); let limit = (store.settings["undoShiftTapMs"] as? Double ?? 400) / 1000; if let last = lastShift, now.timeIntervalSince(last) <= limit { if case .revert(let n, let text, let lang) = tracker.handle(.undo) { inject(proxy, delete: n, text: text); select(lang) }; lastShift = nil } else { lastShift = now } }
+                let down = event.flags.contains(.maskShift); if down { shiftDown[kc] = Date() } else if let start = shiftDown.removeValue(forKey: kc), Date().timeIntervalSince(start) <= 0.25 { let now = Date(); let limit = (store.settings["undoShiftTapMs"] as? Double ?? 400) / 1000; if let last = lastShift, now.timeIntervalSince(last) <= limit { let ua = tracker.handle(.undo); dbg("shift-undo -> \(ua == .pass ? "pass" : "revert")"); if case .revert(let n, let text, let lang) = ua { inject(proxy, delete: n, text: text); select(lang) }; lastShift = nil } else { lastShift = now } }
             }
             return Unmanaged.passUnretained(event)
         }
@@ -41,7 +41,8 @@ final class KeyTap {
             var length = 0; var chars = [UniChar](repeating: 0, count: 16); event.keyboardGetUnicodeString(maxStringLength: 16, actualStringLength: &length, unicodeString: &chars); if length == 0 { _ = tracker.handle(.reset); return Unmanaged.passUnretained(event) }; key = .char(String(utf16CodeUnits: chars, count: length))
         }
         let action = tracker.handle(key)
-        switch action { case .pass: return Unmanaged.passUnretained(event); case .replace(let n, let text, let lang), .revert(let n, let text, let lang): inject(proxy, delete: n, text: text); select(lang); return nil }
+        if key == .backspace || key == .space { dbg("key \(key == .space ? "space" : "backspace") -> \(action == .pass ? "pass" : "act")") }
+        switch action { case .pass: return Unmanaged.passUnretained(event); case .replace(let n, let text, let lang), .revert(let n, let text, let lang): dbg("\(action == .replace(delete: n, insert: text, switchTo: lang) ? "replace" : "revert") del=\(n) ins=\(text.unicodeScalars.count) to=\(lang)"); inject(proxy, delete: n, text: text); select(lang); return nil }
     }
     private func inject(_ proxy: CGEventTapProxy, delete: Int, text: String) {
         func post(_ code: CGKeyCode, _ down: Bool, _ value: String? = nil) { guard let e = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down) else { return }; e.flags = []; e.setIntegerValueField(.eventSourceUserData, value: 0x4B46); if let value { let units = Array(value.utf16); e.keyboardSetUnicodeString(stringLength: units.count, unicodeString: units) }; e.tapPostEvent(proxy) }
@@ -54,14 +55,19 @@ final class KeyTap {
     private func select(_ lang: Lang) {
         let list = TISCreateInputSourceList([kTISPropertyInputSourceIsEnabled as String: true] as CFDictionary, false).takeRetainedValue() as NSArray
         let candidates = lang == .th ? ["com.apple.keylayout.Thai"] : ["com.apple.keylayout.ABC", "com.apple.keylayout.US"]
-        for item in list { let src = item as! TISInputSource; guard let ptr = TISGetInputSourceProperty(src,kTISPropertyInputSourceID) else { continue }; let id = Unmanaged<CFString>.fromOpaque(ptr).takeUnretainedValue() as String; if candidates.contains(id) { expectedSource = id; TISSelectInputSource(src); break } }
+        for item in list { let src = item as! TISInputSource; guard let ptr = TISGetInputSourceProperty(src,kTISPropertyInputSourceID) else { continue }; let id = Unmanaged<CFString>.fromOpaque(ptr).takeUnretainedValue() as String; if candidates.contains(id) { expectedSource = id; let r = TISSelectInputSource(src); dbg("select \(id) status=\(r) now=\(currentID())"); break } }
     }
+    private func dbg(_ line: String) { if store.settings["debug"] as? Bool == true { store.debug(line) } }   // ids/lengths only, never text
+    private func currentID() -> String { guard let s = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue(), let p = TISGetInputSourceProperty(s, kTISPropertyInputSourceID) else { return "?" }; return Unmanaged<CFString>.fromOpaque(p).takeUnretainedValue() as String }
     func sourceChangedByUser() {
         var current: String?
         if let src = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue(), let ptr = TISGetInputSourceProperty(src, kTISPropertyInputSourceID) {
             current = Unmanaged<CFString>.fromOpaque(ptr).takeUnretainedValue() as String
         }
-        if let expectedSource, current == expectedSource { self.expectedSource = nil; return }
+        // macOS may post this notification more than once per switch: every notification that still shows the
+        // source we selected is ours; only a different source means the user switched.
+        if let expectedSource, current == expectedSource { dbg("srcchange ours \(current ?? "?")"); return }
+        dbg("srcchange user \(current ?? "?") expected=\(expectedSource ?? "-")")
         expectedSource = nil; _ = tracker.handle(.reset)
     }
 }

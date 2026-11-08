@@ -2,7 +2,13 @@ import AppKit
 import ApplicationServices
 import Carbon
 
-@main final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+// No nib: create the delegate ourselves (NSApplicationMain would never instantiate it).
+@main enum KeyFlipMain {
+    static let delegate = AppDelegate()
+    static func main() { let app = NSApplication.shared; app.delegate = delegate; app.run() }
+}
+
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let store = Store()
     private var tracker: RunTracker!
     private var tap: KeyTap!

@@ -21,7 +21,7 @@ final class TableMapper: LayoutMapper {
 
 enum Key: Equatable { case char(String), space, tab, returnKey, backspace, undo, reset }
 enum Action: Equatable { case pass; case replace(delete: Int, insert: String, switchTo: Lang); case revert(delete: Int, insert: String, switchTo: Lang) }
-enum TrackerEvent { case runEnded(lang: String); case converted(kind: String, from: String, to: String, score: Double, key: Int?, prev: Lang?); case reverted(kind: String, from: String, to: String) }
+enum TrackerEvent { case runEnded(lang: String); case converted(kind: String, from: String, to: String, score: Double, key: Int?, prev: Lang?, word: String, result: String); case reverted(kind: String, from: String, to: String, word: String, result: String) }
 
 final class RunTracker {
     private let decider: Decider
@@ -30,7 +30,7 @@ final class RunTracker {
     private var run = ""
     private var prev: Lang?
     private var checkedStopped = false
-    private var undoRecord: (source: Lang, target: Lang, original: String, candidate: String, suffix: String, active: Bool)?
+    private var undoRecord: (source: Lang, target: Lang, original: String, currentRun: String, suffix: String, active: Bool, fresh: Bool)?
     private var lastEndedUndo: Bool { undoRecord?.active == true }
     var onEvent: ((TrackerEvent) -> Void)?
     private(set) var never: Set<String>
@@ -50,34 +50,43 @@ final class RunTracker {
             guard let u = undoRecord, u.active else { return .pass }
             return revert(kind: "shift", u: u)
         case .backspace:
-            if let u = undoRecord, u.active { return revert(kind: "backspace", u: u) }
+            if let u = undoRecord, u.active, u.fresh { return revert(kind: "backspace", u: u) }
             if run.isEmpty { prev = nil; undoRecord = nil; checkedStopped = false }
-            else { run = String(run.unicodeScalars.dropLast()); checkedStopped = false }
+            else { run = String(run.unicodeScalars.dropLast()); undoRecord?.currentRun = run; undoRecord?.fresh = false; checkedStopped = false }
             return .pass
         case .returnKey: finish(); undoRecord = nil; prev = nil; return .pass
         case .space, .tab:
             let suffix = key == .space ? " " : "\t"
+            if undoRecord?.active == true, !run.isEmpty {
+                // a typing-converted run ends here: remember the suffix for undo, count the run, check the next one
+                undoRecord?.suffix += suffix
+                onEvent?(.runEnded(lang: lang(run)?.rawValue ?? "neutral")); if let x = lang(run) { prev = x }
+                run = ""; checkedStopped = false
+                return .pass
+            }
             if run.isEmpty, undoRecord?.active == true { undoRecord?.active = false }
-            if !shouldSkip(true) { let d = decider.decide(run: run, prev: prev, complete: true); if d.convert { let source = lang(run) ?? (d.target == .th ? .en : .th); let original = run; let inserted = d.candidate + suffix; let n = count(run); onEvent?(.runEnded(lang: d.target.rawValue)); onEvent?(.converted(kind: "space", from: source.rawValue, to: d.target.rawValue, score: d.score, key: nil, prev: prev)); undoRecord = (source,d.target,original,d.candidate,suffix,true); run = ""; checkedStopped = true; prev = d.target; return .replace(delete: n, insert: inserted, switchTo: d.target) } }
+            if !shouldSkip(true) { let d = decider.decide(run: run, prev: prev, complete: true); if d.convert { let source = lang(run) ?? (d.target == .th ? .en : .th); let original = run; let inserted = d.candidate + suffix; let n = count(run); onEvent?(.runEnded(lang: d.target.rawValue)); onEvent?(.converted(kind: "space", from: source.rawValue, to: d.target.rawValue, score: d.score, key: nil, prev: prev, word: original, result: d.candidate)); undoRecord = (source,d.target,original,d.candidate,suffix,true,true); run = ""; checkedStopped = true; prev = d.target; return .replace(delete: n, insert: inserted, switchTo: d.target) } }
             finish(); return .pass
         case .char(let s):
             if s.isEmpty || s.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) { run = ""; prev = nil; undoRecord = nil; checkedStopped = false; return .pass }
-            if undoRecord != nil { undoRecord?.active = false }
+            if undoRecord != nil { undoRecord?.fresh = false; if run.isEmpty { undoRecord?.active = false; undoRecord = nil } }
             run += s
+            if undoRecord?.active == true { undoRecord?.currentRun = run }
             guard !shouldSkip(false) else { return .pass }
             let d = decider.decide(run: run, prev: prev, complete: false)
             if d.convert {
                 let source = lang(run) ?? (d.target == .th ? .en : .th); let original = run; let n = count(run)
-                onEvent?(.converted(kind: "typing", from: source.rawValue, to: d.target.rawValue, score: d.score, key: n, prev: prev))
-                undoRecord = (source,d.target,original,d.candidate,"",true); run = d.candidate; prev = d.target; checkedStopped = true
+                onEvent?(.converted(kind: "typing", from: source.rawValue, to: d.target.rawValue, score: d.score, key: n, prev: prev, word: original, result: d.candidate))
+                undoRecord = (source,d.target,original,d.candidate,"",true,true); run = d.candidate; prev = d.target; checkedStopped = true
                 return .replace(delete: max(0,n-1), insert: d.candidate, switchTo: d.target)
             }
             return .pass
         }
     }
-    private func revert(kind: String, u: (source: Lang, target: Lang, original: String, candidate: String, suffix: String, active: Bool)) -> Action {
-        let shown = u.candidate + u.suffix; let back = mapper.convert(u.original, to: u.source) + u.suffix
-        never.insert(u.original); onEvent?(.reverted(kind: kind, from: u.target.rawValue, to: u.source.rawValue)); undoRecord = nil; run = u.original; checkedStopped = true; prev = u.source
-        return .revert(delete: count(shown), insert: back, switchTo: u.source)
+    private func revert(kind: String, u: (source: Lang, target: Lang, original: String, currentRun: String, suffix: String, active: Bool, fresh: Bool)) -> Action {
+        let word = u.currentRun; let back = mapper.convert(word, to: u.source); let shown = word + u.suffix
+        never.insert(back); onEvent?(.reverted(kind: kind, from: u.target.rawValue, to: u.source.rawValue, word: word, result: back)); undoRecord = nil; prev = u.source
+        if u.suffix.isEmpty { run = back; checkedStopped = true } else { run = ""; checkedStopped = false }  // run already ended by space/tab
+        return .revert(delete: count(shown), insert: back + u.suffix, switchTo: u.source)
     }
 }

@@ -17,6 +17,7 @@ import Carbon
     private var helperReady = false
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        signal(SIGPIPE, SIG_IGN)  // a dead helper must not kill the app on write
         let resources = Bundle.main.resourceURL ?? URL(fileURLWithPath: ".")
         decider = HelperDecider(python: store.settings["python"] as? String ?? "/usr/bin/python3", script: resources.appendingPathComponent("detector/serve.py"), modelsDir: store.models(bundleResources: resources))
         decider.onReady = { [weak self] in self?.helperReady = true; self?.refreshStatusTitle() }
@@ -50,8 +51,8 @@ import Carbon
     private func record(_ event: TrackerEvent) {
         switch event {
         case .runEnded(let l): store.increment("runs_\(l)")
-        case .converted(let kind, let from, let to, let score, let key, let prev): store.increment("auto_\(kind)"); store.appendEvent(["ts": ISO8601DateFormatter().string(from: Date()),"app": NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "","kind":kind,"from":from,"to":to,"score":score,"key":key as Any? ?? NSNull(),"prev":prev?.rawValue as Any? ?? NSNull()])
-        case .reverted(let kind, let from, let to): store.increment("undo_\(kind)"); store.appendEvent(["ts":ISO8601DateFormatter().string(from: Date()),"app":NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "","kind":"undo_\(kind)","from":from,"to":to,"score":0,"key":NSNull(),"prev":NSNull()]); for word in tracker.never.subtracting(storedNever) { store.addNever(word) }; storedNever = tracker.never
+        case .converted(let kind, let from, let to, let score, let key, let prev, let word, let result): store.increment("auto_\(kind)"); store.appendEvent(["ts": ISO8601DateFormatter().string(from: Date()),"app": NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "","kind":kind,"from":from,"to":to,"score":score,"key":key as Any? ?? NSNull(),"prev":prev?.rawValue as Any? ?? NSNull(),"word":word,"result":result])
+        case .reverted(let kind, let from, let to, let word, let result): store.increment("undo_\(kind)"); store.appendEvent(["ts":ISO8601DateFormatter().string(from: Date()),"app":NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "","kind":"undo_\(kind)","from":from,"to":to,"score":0,"key":NSNull(),"prev":NSNull(),"word":word,"result":result]); for word in tracker.never.subtracting(storedNever) { store.addNever(word) }; storedNever = tracker.never
         }
     }
     @objc private func toggleEnabled() { let value = !(store.settings["enabled"] as? Bool ?? true); store.settings["enabled"] = value; store.saveSettings(); tap.enabled = value; if !value { _ = tracker.handle(.reset) }; menuWillOpen(status.menu!) }

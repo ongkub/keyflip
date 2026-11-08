@@ -9,7 +9,7 @@ final class KeyTap {
     private let store: Store
     private var shiftDown: [Int64: Date] = [:]
     private var lastShift: Date?
-    private var ownSourceChange = false
+    private var expectedSource: String?
     var enabled = true
     init(tracker: RunTracker, store: Store) { self.tracker = tracker; self.store = store }
     func install() -> Bool {
@@ -22,15 +22,16 @@ final class KeyTap {
     private func handle(_ proxy: CGEventTapProxy, _ type: CGEventType, _ event: CGEvent) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput { if let tap { CGEvent.tapEnable(tap: tap, enable: true) }; return Unmanaged.passUnretained(event) }
         if event.getIntegerValueField(.eventSourceUserData) == 0x4B46 { return Unmanaged.passUnretained(event) }
-        if type == .leftMouseDown || type == .rightMouseDown || type == .otherMouseDown { _ = tracker.handle(.reset); return Unmanaged.passUnretained(event) }
+        if type == .leftMouseDown || type == .rightMouseDown || type == .otherMouseDown { shiftDown.removeAll(); lastShift = nil; _ = tracker.handle(.reset); return Unmanaged.passUnretained(event) }
         if type == .flagsChanged {
             let kc = event.getIntegerValueField(.keyboardEventKeycode)
             if kc == 56 || kc == 60 {
-                let down = event.flags.contains(.maskShift); if down { shiftDown[kc] = Date() } else if let start = shiftDown.removeValue(forKey: kc), Date().timeIntervalSince(start) <= 0.25 { let now = Date(); let limit = (store.settings["undoShiftTapMs"] as? Double ?? 400) / 1000; if let last = lastShift, now.timeIntervalSince(last) <= limit { _ = tracker.handle(.undo); lastShift = nil } else { lastShift = now } }
+                let down = event.flags.contains(.maskShift); if down { shiftDown[kc] = Date() } else if let start = shiftDown.removeValue(forKey: kc), Date().timeIntervalSince(start) <= 0.25 { let now = Date(); let limit = (store.settings["undoShiftTapMs"] as? Double ?? 400) / 1000; if let last = lastShift, now.timeIntervalSince(last) <= limit { if case .revert(let n, let text, let lang) = tracker.handle(.undo) { inject(proxy, delete: n, text: text); select(lang) }; lastShift = nil } else { lastShift = now } }
             }
             return Unmanaged.passUnretained(event)
         }
         guard type == .keyDown else { return Unmanaged.passUnretained(event) }
+        shiftDown.removeAll(); lastShift = nil
         if !enabled || IsSecureEventInputEnabled() || store.excluded(NSWorkspace.shared.frontmostApplication?.bundleIdentifier) || !supportedSource() { _ = tracker.handle(.reset); return Unmanaged.passUnretained(event) }
         let flags = event.flags
         if flags.contains(.maskCommand) || flags.contains(.maskControl) || flags.contains(.maskAlternate) { _ = tracker.handle(.reset); return Unmanaged.passUnretained(event) }
@@ -53,7 +54,14 @@ final class KeyTap {
     private func select(_ lang: Lang) {
         let list = TISCreateInputSourceList([kTISPropertyInputSourceIsEnabled as String: true] as CFDictionary, false).takeRetainedValue() as NSArray
         let candidates = lang == .th ? ["com.apple.keylayout.Thai"] : ["com.apple.keylayout.ABC", "com.apple.keylayout.US"]
-        for item in list { let src = item as! TISInputSource; guard let ptr = TISGetInputSourceProperty(src,kTISPropertyInputSourceID) else { continue }; let id = Unmanaged<CFString>.fromOpaque(ptr).takeUnretainedValue() as String; if candidates.contains(id) { ownSourceChange = true; TISSelectInputSource(src); DispatchQueue.main.asyncAfter(deadline: .now()+0.2) { self.ownSourceChange = false }; break } }
+        for item in list { let src = item as! TISInputSource; guard let ptr = TISGetInputSourceProperty(src,kTISPropertyInputSourceID) else { continue }; let id = Unmanaged<CFString>.fromOpaque(ptr).takeUnretainedValue() as String; if candidates.contains(id) { expectedSource = id; TISSelectInputSource(src); break } }
     }
-    func sourceChangedByUser() { if !ownSourceChange { _ = tracker.handle(.reset) } }
+    func sourceChangedByUser() {
+        var current: String?
+        if let src = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue(), let ptr = TISGetInputSourceProperty(src, kTISPropertyInputSourceID) {
+            current = Unmanaged<CFString>.fromOpaque(ptr).takeUnretainedValue() as String
+        }
+        if let expectedSource, current == expectedSource { self.expectedSource = nil; return }
+        expectedSource = nil; _ = tracker.handle(.reset)
+    }
 }

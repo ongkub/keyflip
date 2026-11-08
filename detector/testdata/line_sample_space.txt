@@ -1,0 +1,15 @@
+2026.11.07 วันเสาร์
+09:05 Me Test สวัสดีครับ ทุกคน
+09:06 Friend A ดีจ้า
+09:07 Me Test พรุ่งนี้มี meeting กี่โมงครับ
+09:08 Friend A 10:30 นะ
+09:09 Me Test โอเคครับ เดี๋ยวส่ง file ให้
+09:10 Me Test รูป
+09:11 Friend A สติกเกอร์
+09:12 Me Test ดูลิงก์นี้ <a href="https://example.com/x">https://example.com/x</a> ครับ
+2026.11.08 วันอาทิตย์
+10:00 Me Test บรรทัดแรก
+บรรทัดที่สอง English
+10:01 Friend A ok
+10:02 Me Test ขอบคุณครับ
+10:03 Friend A ได้เลย

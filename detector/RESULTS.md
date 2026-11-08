@@ -590,3 +590,28 @@ Chosen config: `{"ctx_delta": 0.0, "dictionary_bonus": 0.0, "final_threshold": 2
 ## Known weaknesses
 
 The dev FP cap did not generalize fully: test English is 11.817 FP/1,000 versus the v1 baseline of 3.10, and chat Thai is 19.444/1,000. Limiting checks to three keys reduces typing checks but does not change run-level FP, since the complete check still runs at space. The n-gram models come from limited local-language corpora, so short names, abbreviations, and uncommon Thai words remain ambiguous. Neutral has no chat candidates, so its chat FP rate is n/a. Run boundaries are heuristic, and chat is a small illustrative sample rather than a representative user study.
+
+## v3: owner's real chats (aggregate numbers only, 2026-11-08)
+
+Data: 3 LINE exports (space-separated format), only the owner's own messages, 16,066 after dedupe, split 70/30 by
+hash; a 20% dev split was carved out of the 70% and personal models were retrained without it for tuning. The
+30% test split (`me`) was used once, after the config was fixed. No message text is stored in this repo.
+
+Changes: parser supports `HH:MM Sender Message` with spaces in names; bare placeholders (`รูป`, `สติกเกอร์`, …),
+HTML tags and zero-width characters are stripped; `orthography_auto=false` (invalid Thai adds evidence instead of
+converting immediately); `min_len=4` while typing, `min_len_final=3` at the space bar; `max_check_len=null`.
+
+| set | lang | v2 config, generic model FP/1000 · recall | v3 config, generic model | v3 config, personal model |
+|---|---|---|---|---|
+| me | th | 28.42 · 93.89 | 7.11 · 91.42 | **1.72 · 93.70** |
+| me | en | 7.79 · 96.79 | 5.19 · 85.77 | **5.19 · 85.88** |
+| chat | th | 19.44 · 97.78 | 0.00 · 89.44 | 0.00 · 92.78 |
+| chat | en | 0.00 · 97.13 | 0.00 · 89.66 | 0.00 · 89.66 |
+| test | th | 0.36 · 99.89 | 0.00 · 97.76 | 0.00 · 97.37 |
+| test | en | 11.82 · 96.73 | 0.19 · 90.02 | 0.19 · 90.00 |
+
+Personal model on `me`: Thai caught while typing 86.4% (median 4th key, p90 5th), at space 7.3%; English while
+typing 69.8%, at space 16.1%. All 5 English "false positives" on `me` decode to meaningful Thai, i.e. real
+wrong-layout text the owner left uncorrected, so the true English FP is ~0. The 7 Thai FPs are 5 words that already
+contained typos plus a Thai-digit laugh and an interjection. Cost of v3: English recall drops because 1–2 letter
+English words are never converted (22 of the 25 listed misses), and detection waits until the 4th key.

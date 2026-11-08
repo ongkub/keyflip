@@ -97,11 +97,15 @@ class Detector:
         thai_side = s if source == "th" else candidate
         if not thai_orthography_ok(thai_side):
             if source == "th":
-                return "convert", score + self.config["orthography_convert"]
-            score -= self.config["orthography_keep"]
+                if self.config.get("orthography_auto", True):
+                    return "convert", score + self.config["orthography_convert"]
+                score += self.config["orthography_convert"]  # evidence only: still needs min_len + threshold
+            else:
+                score -= self.config["orthography_keep"]
         if source == "en" and s.lower().rstrip(string.punctuation) in self.words:
             score -= self.config["dictionary_bonus"]
-        if len(s) < self.config["min_len"]:
+        min_len = self.config.get("min_len_final", self.config["min_len"]) if complete else self.config["min_len"]
+        if len(s) < min_len:
             return "keep", score
         return ("convert" if score > threshold else "keep"), score
 

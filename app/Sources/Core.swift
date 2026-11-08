@@ -34,6 +34,8 @@ final class RunTracker {
     private var lastEndedUndo: Bool { undoRecord?.active == true }
     var onEvent: ((TrackerEvent) -> Void)?
     private(set) var never: Set<String>
+    private var backspaceUndos: [String: Int] = [:]   // a quick Backspace is often just editing
+    func clearNever() { never.removeAll(); backspaceUndos.removeAll() }
     init(decider: Decider, mapper: LayoutMapper, never: Set<String>, deleteMode: String = "scalar") { self.decider = decider; self.mapper = mapper; self.never = never; self.deleteMode = deleteMode }
     private func lang(_ s: String) -> Lang? {
         var th = false, en = false
@@ -85,7 +87,9 @@ final class RunTracker {
     }
     private func revert(kind: String, u: (source: Lang, target: Lang, original: String, currentRun: String, suffix: String, active: Bool, fresh: Bool)) -> Action {
         let word = u.currentRun; let back = mapper.convert(word, to: u.source); let shown = word + u.suffix
-        never.insert(back); onEvent?(.reverted(kind: kind, from: u.target.rawValue, to: u.source.rawValue, word: word, result: back)); undoRecord = nil; prev = u.source
+        if kind == "backspace" { backspaceUndos[back, default: 0] += 1 }
+        if kind != "backspace" || backspaceUndos[back, default: 0] >= 2 { never.insert(back) }
+        onEvent?(.reverted(kind: kind, from: u.target.rawValue, to: u.source.rawValue, word: word, result: back)); undoRecord = nil; prev = u.source
         if u.suffix.isEmpty { run = back; checkedStopped = true } else { run = ""; checkedStopped = false }  // run already ended by space/tab
         return .revert(delete: count(shown), insert: back + u.suffix, switchTo: u.source)
     }

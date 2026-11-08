@@ -44,9 +44,22 @@ final class KeyTap {
         if key == .backspace || key == .space { dbg("key \(key == .space ? "space" : "backspace") -> \(action == .pass ? "pass" : "act")") }
         switch action { case .pass: return Unmanaged.passUnretained(event); case .replace(let n, let text, let lang), .revert(let n, let text, let lang): dbg("\(action == .replace(delete: n, insert: text, switchTo: lang) ? "replace" : "revert") del=\(n) ins=\(text.unicodeScalars.count) to=\(lang)"); inject(proxy, delete: n, text: text); select(lang); return nil }
     }
+    private let systemWide = AXUIElementCreateSystemWide()
+    private func selectionLength() -> Int {   // selected text in the focused field; 30 ms cap so the tap never stalls
+        AXUIElementSetMessagingTimeout(systemWide, 0.03)
+        var focused: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(systemWide, kAXFocusedUIElementAttribute as CFString, &focused) == .success, let f = focused, CFGetTypeID(f) == AXUIElementGetTypeID() else { return 0 }
+        let element = f as! AXUIElement; AXUIElementSetMessagingTimeout(element, 0.03)
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &value) == .success, let v = value, CFGetTypeID(v) == AXValueGetTypeID() else { return 0 }
+        var range = CFRange(); guard AXValueGetValue(v as! AXValue, .cfRange, &range) else { return 0 }
+        return range.length
+    }
     private func inject(_ proxy: CGEventTapProxy, delete: Int, text: String) {
         func post(_ code: CGKeyCode, _ down: Bool, _ value: String? = nil) { guard let e = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down) else { return }; e.flags = []; e.setIntegerValueField(.eventSourceUserData, value: 0x4B46); if let value { let units = Array(value.utf16); e.keyboardSetUnicodeString(stringLength: units.count, unicodeString: units) }; e.tapPostEvent(proxy) }
-        for _ in 0..<max(0, delete) { post(51,true); post(51,false) }
+        let extra = delete > 0 && selectionLength() > 0 ? 1 : 0   // first Backspace only removes the highlighted suggestion
+        if extra > 0 { dbg("selection before delete -> +1 backspace") }
+        for _ in 0..<max(0, delete + extra) { post(51,true); post(51,false) }
         var chunk = "", units = 0
         for c in text { if units + c.utf16.count > 16 { post(0,true,chunk); post(0,false); chunk = ""; units = 0 }; chunk += String(c); units += c.utf16.count }
         if !chunk.isEmpty { post(0,true,chunk); post(0,false) }

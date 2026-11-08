@@ -16,6 +16,7 @@ final class Store {
         if let data = try? Data(contentsOf: root.appendingPathComponent("stats.json")), let obj = try? JSONSerialization.jsonObject(with: data) as? [String: [String: Int]] { stats = obj }
     }
     func saveSettings() { if let data = try? JSONSerialization.data(withJSONObject: settings, options: [.prettyPrinted, .sortedKeys]) { try? data.write(to: root.appendingPathComponent("settings.json"), options: .atomic) } }
+    func clearNever() { never.removeAll(); try? Data().write(to: root.appendingPathComponent("never.txt")) }
     func addNever(_ word: String) { guard !word.isEmpty, never.insert(word).inserted else { return }; let url = root.appendingPathComponent("never.txt"); if let h = try? FileHandle(forWritingTo: url) { try? h.seekToEnd(); try? h.write(contentsOf: Data((word + "\n").utf8)); try? h.close() } else { try? Data((word + "\n").utf8).write(to: url) } }
     func increment(_ key: String) { let date = ISO8601DateFormatter(); date.formatOptions = [.withFullDate]; let day = date.string(from: Date()); stats[day, default: [:]][key, default: 0] += 1; if Date().timeIntervalSince(lastWrite) >= 30 { flush() } }
     func flush() { lastWrite = Date(); if let data = try? JSONSerialization.data(withJSONObject: stats, options: [.prettyPrinted, .sortedKeys]) { try? data.write(to: root.appendingPathComponent("stats.json"), options: .atomic) } }

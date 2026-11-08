@@ -1,97 +1,400 @@
 # Detector evaluation
 
-Chosen config: `{"ctx_delta": 0.0, "dictionary_bonus": 0.0, "min_len": 2, "orthography_convert": 1.8, "orthography_keep": 1.8, "threshold": 4.0}`
+Chosen config: `{"ctx_delta": 0.0, "dictionary_bonus": 0.0, "final_threshold": 2.0, "max_check_len": 3, "min_len": 2, "neutral_rule": true, "orthography_convert": 1.8, "orthography_keep": 1.8, "threshold": 4.0}`
 
-## Dev threshold trade-off
+## Dev tuning grid
 
-| threshold | ctx_delta | FP/1000 | recall % |
-|---:|---:|---:|---:|
-| -2 | 0 | 247.239 | 99.39 |
-| -2 | 0.25 | 245.245 | 99.39 |
-| -1 | 0 | 190.184 | 99.37 |
-| -1 | 0.25 | 192.485 | 99.37 |
-| 0 | 0 | 172.546 | 99.36 |
-| 0 | 0.25 | 171.472 | 99.36 |
-| 0.5 | 0 | 150.153 | 99.36 |
-| 0.5 | 0.25 | 146.472 | 99.36 |
-| 1 | 0 | 134.969 | 99.34 |
-| 1 | 0.25 | 134.969 | 99.33 |
-| 1.5 | 0 | 132.362 | 99.31 |
-| 1.5 | 0.25 | 129.908 | 99.31 |
-| 2 | 0 | 120.245 | 99.31 |
-| 2 | 0.25 | 119.479 | 99.31 |
-| 3 | 0 | 102.914 | 99.28 |
-| 3 | 0.25 | 101.994 | 99.28 |
-| 4 | 0 | 82.209 | 99.13 |
-| 4 | 0.25 | 87.730 | 99.13 |
+| typing threshold | final threshold | ctx delta | min len | max check len | neutral rule | max FP/1000 | recall % | meets FP cap |
+|---:|---:|---:|---:|---:|---|---:|---:|---|
+| 0 | 0 | 0 | 2 | 3 | off | 32.998 | 99.51 | no |
+| 0 | 0 | 0 | 2 | 3 | on | 32.998 | 99.61 | no |
+| 0 | 0 | 0 | 2 | 4 | off | 32.998 | 99.51 | no |
+| 0 | 0 | 0 | 2 | 4 | on | 32.998 | 99.61 | no |
+| 0 | 0 | 0 | 2 | 6 | off | 32.998 | 99.51 | no |
+| 0 | 0 | 0 | 2 | 6 | on | 32.998 | 99.61 | no |
+| 0 | 0 | 0 | 2 | 8 | off | 32.998 | 99.51 | no |
+| 0 | 0 | 0 | 2 | 8 | on | 32.998 | 99.61 | no |
+| 0 | 0 | 0 | 2 | None | off | 32.998 | 99.51 | no |
+| 0 | 0 | 0 | 2 | None | on | 32.998 | 99.61 | no |
+| 0 | 0 | 0 | 3 | 3 | off | 3.313 | 97.21 | no |
+| 0 | 0 | 0 | 3 | 3 | on | 3.313 | 97.30 | no |
+| 0 | 0 | 0 | 3 | 4 | off | 3.976 | 97.21 | no |
+| 0 | 0 | 0 | 3 | 4 | on | 3.976 | 97.30 | no |
+| 0 | 0 | 0 | 3 | 6 | off | 4.639 | 97.21 | no |
+| 0 | 0 | 0 | 3 | 6 | on | 4.639 | 97.30 | no |
+| 0 | 0 | 0 | 3 | 8 | off | 4.639 | 97.21 | no |
+| 0 | 0 | 0 | 3 | 8 | on | 4.639 | 97.30 | no |
+| 0 | 0 | 0 | 3 | None | off | 4.639 | 97.21 | no |
+| 0 | 0 | 0 | 3 | None | on | 4.639 | 97.30 | no |
+| 0 | 0 | 0.25 | 2 | 3 | off | 39.150 | 99.51 | no |
+| 0 | 0 | 0.25 | 2 | 3 | on | 39.150 | 99.61 | no |
+| 0 | 0 | 0.25 | 2 | 4 | off | 39.150 | 99.51 | no |
+| 0 | 0 | 0.25 | 2 | 4 | on | 39.150 | 99.61 | no |
+| 0 | 0 | 0.25 | 2 | 6 | off | 39.150 | 99.51 | no |
+| 0 | 0 | 0.25 | 2 | 6 | on | 39.150 | 99.61 | no |
+| 0 | 0 | 0.25 | 2 | 8 | off | 39.150 | 99.51 | no |
+| 0 | 0 | 0.25 | 2 | 8 | on | 39.150 | 99.61 | no |
+| 0 | 0 | 0.25 | 2 | None | off | 39.150 | 99.51 | no |
+| 0 | 0 | 0.25 | 2 | None | on | 39.150 | 99.61 | no |
+| 0 | 0 | 0.25 | 3 | 3 | off | 2.796 | 97.21 | no |
+| 0 | 0 | 0.25 | 3 | 3 | on | 2.796 | 97.30 | no |
+| 0 | 0 | 0.25 | 3 | 4 | off | 2.796 | 97.21 | no |
+| 0 | 0 | 0.25 | 3 | 4 | on | 2.796 | 97.30 | no |
+| 0 | 0 | 0.25 | 3 | 6 | off | 3.976 | 97.21 | no |
+| 0 | 0 | 0.25 | 3 | 6 | on | 3.976 | 97.30 | no |
+| 0 | 0 | 0.25 | 3 | 8 | off | 3.976 | 97.21 | no |
+| 0 | 0 | 0.25 | 3 | 8 | on | 3.976 | 97.30 | no |
+| 0 | 0 | 0.25 | 3 | None | off | 3.976 | 97.21 | no |
+| 0 | 0 | 0.25 | 3 | None | on | 3.976 | 97.30 | no |
+| 0 | 2 | 0 | 2 | 3 | off | 32.998 | 99.51 | no |
+| 0 | 2 | 0 | 2 | 3 | on | 32.998 | 99.61 | no |
+| 0 | 2 | 0 | 2 | 4 | off | 32.998 | 99.51 | no |
+| 0 | 2 | 0 | 2 | 4 | on | 32.998 | 99.61 | no |
+| 0 | 2 | 0 | 2 | 6 | off | 32.998 | 99.51 | no |
+| 0 | 2 | 0 | 2 | 6 | on | 32.998 | 99.61 | no |
+| 0 | 2 | 0 | 2 | 8 | off | 32.998 | 99.51 | no |
+| 0 | 2 | 0 | 2 | 8 | on | 32.998 | 99.61 | no |
+| 0 | 2 | 0 | 2 | None | off | 32.998 | 99.51 | no |
+| 0 | 2 | 0 | 2 | None | on | 32.998 | 99.61 | no |
+| 0 | 2 | 0 | 3 | 3 | off | 3.313 | 97.18 | no |
+| 0 | 2 | 0 | 3 | 3 | on | 3.313 | 97.27 | no |
+| 0 | 2 | 0 | 3 | 4 | off | 3.976 | 97.18 | no |
+| 0 | 2 | 0 | 3 | 4 | on | 3.976 | 97.27 | no |
+| 0 | 2 | 0 | 3 | 6 | off | 4.639 | 97.18 | no |
+| 0 | 2 | 0 | 3 | 6 | on | 4.639 | 97.27 | no |
+| 0 | 2 | 0 | 3 | 8 | off | 4.639 | 97.18 | no |
+| 0 | 2 | 0 | 3 | 8 | on | 4.639 | 97.27 | no |
+| 0 | 2 | 0 | 3 | None | off | 4.639 | 97.18 | no |
+| 0 | 2 | 0 | 3 | None | on | 4.639 | 97.27 | no |
+| 0 | 2 | 0.25 | 2 | 3 | off | 39.150 | 99.51 | no |
+| 0 | 2 | 0.25 | 2 | 3 | on | 39.150 | 99.61 | no |
+| 0 | 2 | 0.25 | 2 | 4 | off | 39.150 | 99.51 | no |
+| 0 | 2 | 0.25 | 2 | 4 | on | 39.150 | 99.61 | no |
+| 0 | 2 | 0.25 | 2 | 6 | off | 39.150 | 99.51 | no |
+| 0 | 2 | 0.25 | 2 | 6 | on | 39.150 | 99.61 | no |
+| 0 | 2 | 0.25 | 2 | 8 | off | 39.150 | 99.51 | no |
+| 0 | 2 | 0.25 | 2 | 8 | on | 39.150 | 99.61 | no |
+| 0 | 2 | 0.25 | 2 | None | off | 39.150 | 99.51 | no |
+| 0 | 2 | 0.25 | 2 | None | on | 39.150 | 99.61 | no |
+| 0 | 2 | 0.25 | 3 | 3 | off | 2.796 | 97.21 | no |
+| 0 | 2 | 0.25 | 3 | 3 | on | 2.796 | 97.30 | no |
+| 0 | 2 | 0.25 | 3 | 4 | off | 2.796 | 97.21 | no |
+| 0 | 2 | 0.25 | 3 | 4 | on | 2.796 | 97.30 | no |
+| 0 | 2 | 0.25 | 3 | 6 | off | 3.976 | 97.21 | no |
+| 0 | 2 | 0.25 | 3 | 6 | on | 3.976 | 97.30 | no |
+| 0 | 2 | 0.25 | 3 | 8 | off | 3.976 | 97.21 | no |
+| 0 | 2 | 0.25 | 3 | 8 | on | 3.976 | 97.30 | no |
+| 0 | 2 | 0.25 | 3 | None | off | 3.976 | 97.21 | no |
+| 0 | 2 | 0.25 | 3 | None | on | 3.976 | 97.30 | no |
+| 0 | 4 | 0 | 2 | 3 | off | 32.998 | 99.45 | no |
+| 0 | 4 | 0 | 2 | 3 | on | 32.998 | 99.55 | no |
+| 0 | 4 | 0 | 2 | 4 | off | 32.998 | 99.48 | no |
+| 0 | 4 | 0 | 2 | 4 | on | 32.998 | 99.58 | no |
+| 0 | 4 | 0 | 2 | 6 | off | 32.998 | 99.48 | no |
+| 0 | 4 | 0 | 2 | 6 | on | 32.998 | 99.58 | no |
+| 0 | 4 | 0 | 2 | 8 | off | 32.998 | 99.48 | no |
+| 0 | 4 | 0 | 2 | 8 | on | 32.998 | 99.58 | no |
+| 0 | 4 | 0 | 2 | None | off | 32.998 | 99.48 | no |
+| 0 | 4 | 0 | 2 | None | on | 32.998 | 99.58 | no |
+| 0 | 4 | 0 | 3 | 3 | off | 3.313 | 97.12 | no |
+| 0 | 4 | 0 | 3 | 3 | on | 3.313 | 97.21 | no |
+| 0 | 4 | 0 | 3 | 4 | off | 3.976 | 97.18 | no |
+| 0 | 4 | 0 | 3 | 4 | on | 3.976 | 97.27 | no |
+| 0 | 4 | 0 | 3 | 6 | off | 4.639 | 97.18 | no |
+| 0 | 4 | 0 | 3 | 6 | on | 4.639 | 97.27 | no |
+| 0 | 4 | 0 | 3 | 8 | off | 4.639 | 97.18 | no |
+| 0 | 4 | 0 | 3 | 8 | on | 4.639 | 97.27 | no |
+| 0 | 4 | 0 | 3 | None | off | 4.639 | 97.18 | no |
+| 0 | 4 | 0 | 3 | None | on | 4.639 | 97.27 | no |
+| 0 | 4 | 0.25 | 2 | 3 | off | 39.150 | 99.45 | no |
+| 0 | 4 | 0.25 | 2 | 3 | on | 39.150 | 99.55 | no |
+| 0 | 4 | 0.25 | 2 | 4 | off | 39.150 | 99.48 | no |
+| 0 | 4 | 0.25 | 2 | 4 | on | 39.150 | 99.58 | no |
+| 0 | 4 | 0.25 | 2 | 6 | off | 39.150 | 99.48 | no |
+| 0 | 4 | 0.25 | 2 | 6 | on | 39.150 | 99.58 | no |
+| 0 | 4 | 0.25 | 2 | 8 | off | 39.150 | 99.48 | no |
+| 0 | 4 | 0.25 | 2 | 8 | on | 39.150 | 99.58 | no |
+| 0 | 4 | 0.25 | 2 | None | off | 39.150 | 99.48 | no |
+| 0 | 4 | 0.25 | 2 | None | on | 39.150 | 99.58 | no |
+| 0 | 4 | 0.25 | 3 | 3 | off | 2.796 | 97.18 | no |
+| 0 | 4 | 0.25 | 3 | 3 | on | 2.796 | 97.27 | no |
+| 0 | 4 | 0.25 | 3 | 4 | off | 2.796 | 97.21 | no |
+| 0 | 4 | 0.25 | 3 | 4 | on | 2.796 | 97.30 | no |
+| 0 | 4 | 0.25 | 3 | 6 | off | 3.976 | 97.21 | no |
+| 0 | 4 | 0.25 | 3 | 6 | on | 3.976 | 97.30 | no |
+| 0 | 4 | 0.25 | 3 | 8 | off | 3.976 | 97.21 | no |
+| 0 | 4 | 0.25 | 3 | 8 | on | 3.976 | 97.30 | no |
+| 0 | 4 | 0.25 | 3 | None | off | 3.976 | 97.21 | no |
+| 0 | 4 | 0.25 | 3 | None | on | 3.976 | 97.30 | no |
+| 2 | 0 | 0 | 2 | 3 | off | 1.325 | 99.51 | no |
+| 2 | 0 | 0 | 2 | 3 | on | 1.325 | 99.61 | no |
+| 2 | 0 | 0 | 2 | 4 | off | 2.651 | 99.51 | no |
+| 2 | 0 | 0 | 2 | 4 | on | 2.651 | 99.61 | no |
+| 2 | 0 | 0 | 2 | 6 | off | 2.651 | 99.51 | no |
+| 2 | 0 | 0 | 2 | 6 | on | 2.651 | 99.61 | no |
+| 2 | 0 | 0 | 2 | 8 | off | 2.651 | 99.51 | no |
+| 2 | 0 | 0 | 2 | 8 | on | 2.651 | 99.61 | no |
+| 2 | 0 | 0 | 2 | None | off | 2.651 | 99.51 | no |
+| 2 | 0 | 0 | 2 | None | on | 2.651 | 99.61 | no |
+| 2 | 0 | 0 | 3 | 3 | off | 0.663 | 97.21 | yes |
+| 2 | 0 | 0 | 3 | 3 | on | 0.663 | 97.30 | yes |
+| 2 | 0 | 0 | 3 | 4 | off | 1.988 | 97.21 | no |
+| 2 | 0 | 0 | 3 | 4 | on | 1.988 | 97.30 | no |
+| 2 | 0 | 0 | 3 | 6 | off | 1.988 | 97.21 | no |
+| 2 | 0 | 0 | 3 | 6 | on | 1.988 | 97.30 | no |
+| 2 | 0 | 0 | 3 | 8 | off | 1.988 | 97.21 | no |
+| 2 | 0 | 0 | 3 | 8 | on | 1.988 | 97.30 | no |
+| 2 | 0 | 0 | 3 | None | off | 1.988 | 97.21 | no |
+| 2 | 0 | 0 | 3 | None | on | 1.988 | 97.30 | no |
+| 2 | 0 | 0.25 | 2 | 3 | off | 1.325 | 99.51 | no |
+| 2 | 0 | 0.25 | 2 | 3 | on | 1.325 | 99.61 | no |
+| 2 | 0 | 0.25 | 2 | 4 | off | 2.651 | 99.51 | no |
+| 2 | 0 | 0.25 | 2 | 4 | on | 2.651 | 99.61 | no |
+| 2 | 0 | 0.25 | 2 | 6 | off | 2.651 | 99.51 | no |
+| 2 | 0 | 0.25 | 2 | 6 | on | 2.651 | 99.61 | no |
+| 2 | 0 | 0.25 | 2 | 8 | off | 2.651 | 99.51 | no |
+| 2 | 0 | 0.25 | 2 | 8 | on | 2.651 | 99.61 | no |
+| 2 | 0 | 0.25 | 2 | None | off | 2.651 | 99.51 | no |
+| 2 | 0 | 0.25 | 2 | None | on | 2.651 | 99.61 | no |
+| 2 | 0 | 0.25 | 3 | 3 | off | 0.663 | 97.21 | yes |
+| 2 | 0 | 0.25 | 3 | 3 | on | 0.663 | 97.30 | yes |
+| 2 | 0 | 0.25 | 3 | 4 | off | 1.988 | 97.21 | no |
+| 2 | 0 | 0.25 | 3 | 4 | on | 1.988 | 97.30 | no |
+| 2 | 0 | 0.25 | 3 | 6 | off | 1.988 | 97.21 | no |
+| 2 | 0 | 0.25 | 3 | 6 | on | 1.988 | 97.30 | no |
+| 2 | 0 | 0.25 | 3 | 8 | off | 1.988 | 97.21 | no |
+| 2 | 0 | 0.25 | 3 | 8 | on | 1.988 | 97.30 | no |
+| 2 | 0 | 0.25 | 3 | None | off | 1.988 | 97.21 | no |
+| 2 | 0 | 0.25 | 3 | None | on | 1.988 | 97.30 | no |
+| 2 | 2 | 0 | 2 | 3 | off | 1.119 | 99.42 | no |
+| 2 | 2 | 0 | 2 | 3 | on | 1.119 | 99.51 | no |
+| 2 | 2 | 0 | 2 | 4 | off | 1.988 | 99.42 | no |
+| 2 | 2 | 0 | 2 | 4 | on | 1.988 | 99.51 | no |
+| 2 | 2 | 0 | 2 | 6 | off | 1.988 | 99.42 | no |
+| 2 | 2 | 0 | 2 | 6 | on | 1.988 | 99.51 | no |
+| 2 | 2 | 0 | 2 | 8 | off | 1.988 | 99.42 | no |
+| 2 | 2 | 0 | 2 | 8 | on | 1.988 | 99.51 | no |
+| 2 | 2 | 0 | 2 | None | off | 1.988 | 99.42 | no |
+| 2 | 2 | 0 | 2 | None | on | 1.988 | 99.51 | no |
+| 2 | 2 | 0 | 3 | 3 | off | 0.663 | 97.09 | yes |
+| 2 | 2 | 0 | 3 | 3 | on | 0.663 | 97.18 | yes |
+| 2 | 2 | 0 | 3 | 4 | off | 1.988 | 97.09 | no |
+| 2 | 2 | 0 | 3 | 4 | on | 1.988 | 97.18 | no |
+| 2 | 2 | 0 | 3 | 6 | off | 1.988 | 97.09 | no |
+| 2 | 2 | 0 | 3 | 6 | on | 1.988 | 97.18 | no |
+| 2 | 2 | 0 | 3 | 8 | off | 1.988 | 97.09 | no |
+| 2 | 2 | 0 | 3 | 8 | on | 1.988 | 97.18 | no |
+| 2 | 2 | 0 | 3 | None | off | 1.988 | 97.09 | no |
+| 2 | 2 | 0 | 3 | None | on | 1.988 | 97.18 | no |
+| 2 | 2 | 0.25 | 2 | 3 | off | 1.119 | 99.42 | no |
+| 2 | 2 | 0.25 | 2 | 3 | on | 1.119 | 99.51 | no |
+| 2 | 2 | 0.25 | 2 | 4 | off | 1.988 | 99.42 | no |
+| 2 | 2 | 0.25 | 2 | 4 | on | 1.988 | 99.51 | no |
+| 2 | 2 | 0.25 | 2 | 6 | off | 1.988 | 99.42 | no |
+| 2 | 2 | 0.25 | 2 | 6 | on | 1.988 | 99.51 | no |
+| 2 | 2 | 0.25 | 2 | 8 | off | 1.988 | 99.42 | no |
+| 2 | 2 | 0.25 | 2 | 8 | on | 1.988 | 99.51 | no |
+| 2 | 2 | 0.25 | 2 | None | off | 1.988 | 99.42 | no |
+| 2 | 2 | 0.25 | 2 | None | on | 1.988 | 99.51 | no |
+| 2 | 2 | 0.25 | 3 | 3 | off | 0.663 | 97.09 | yes |
+| 2 | 2 | 0.25 | 3 | 3 | on | 0.663 | 97.18 | yes |
+| 2 | 2 | 0.25 | 3 | 4 | off | 1.988 | 97.09 | no |
+| 2 | 2 | 0.25 | 3 | 4 | on | 1.988 | 97.18 | no |
+| 2 | 2 | 0.25 | 3 | 6 | off | 1.988 | 97.09 | no |
+| 2 | 2 | 0.25 | 3 | 6 | on | 1.988 | 97.18 | no |
+| 2 | 2 | 0.25 | 3 | 8 | off | 1.988 | 97.09 | no |
+| 2 | 2 | 0.25 | 3 | 8 | on | 1.988 | 97.18 | no |
+| 2 | 2 | 0.25 | 3 | None | off | 1.988 | 97.09 | no |
+| 2 | 2 | 0.25 | 3 | None | on | 1.988 | 97.18 | no |
+| 2 | 4 | 0 | 2 | 3 | off | 1.119 | 99.27 | no |
+| 2 | 4 | 0 | 2 | 3 | on | 1.119 | 99.36 | no |
+| 2 | 4 | 0 | 2 | 4 | off | 1.988 | 99.27 | no |
+| 2 | 4 | 0 | 2 | 4 | on | 1.988 | 99.36 | no |
+| 2 | 4 | 0 | 2 | 6 | off | 1.988 | 99.39 | no |
+| 2 | 4 | 0 | 2 | 6 | on | 1.988 | 99.48 | no |
+| 2 | 4 | 0 | 2 | 8 | off | 1.988 | 99.39 | no |
+| 2 | 4 | 0 | 2 | 8 | on | 1.988 | 99.48 | no |
+| 2 | 4 | 0 | 2 | None | off | 1.988 | 99.39 | no |
+| 2 | 4 | 0 | 2 | None | on | 1.988 | 99.48 | no |
+| 2 | 4 | 0 | 3 | 3 | off | 0.663 | 96.97 | yes |
+| 2 | 4 | 0 | 3 | 3 | on | 0.663 | 97.06 | yes |
+| 2 | 4 | 0 | 3 | 4 | off | 1.988 | 96.97 | no |
+| 2 | 4 | 0 | 3 | 4 | on | 1.988 | 97.06 | no |
+| 2 | 4 | 0 | 3 | 6 | off | 1.988 | 97.09 | no |
+| 2 | 4 | 0 | 3 | 6 | on | 1.988 | 97.18 | no |
+| 2 | 4 | 0 | 3 | 8 | off | 1.988 | 97.09 | no |
+| 2 | 4 | 0 | 3 | 8 | on | 1.988 | 97.18 | no |
+| 2 | 4 | 0 | 3 | None | off | 1.988 | 97.09 | no |
+| 2 | 4 | 0 | 3 | None | on | 1.988 | 97.18 | no |
+| 2 | 4 | 0.25 | 2 | 3 | off | 1.119 | 99.30 | no |
+| 2 | 4 | 0.25 | 2 | 3 | on | 1.119 | 99.39 | no |
+| 2 | 4 | 0.25 | 2 | 4 | off | 1.988 | 99.30 | no |
+| 2 | 4 | 0.25 | 2 | 4 | on | 1.988 | 99.39 | no |
+| 2 | 4 | 0.25 | 2 | 6 | off | 1.988 | 99.39 | no |
+| 2 | 4 | 0.25 | 2 | 6 | on | 1.988 | 99.48 | no |
+| 2 | 4 | 0.25 | 2 | 8 | off | 1.988 | 99.39 | no |
+| 2 | 4 | 0.25 | 2 | 8 | on | 1.988 | 99.48 | no |
+| 2 | 4 | 0.25 | 2 | None | off | 1.988 | 99.39 | no |
+| 2 | 4 | 0.25 | 2 | None | on | 1.988 | 99.48 | no |
+| 2 | 4 | 0.25 | 3 | 3 | off | 0.663 | 97.00 | yes |
+| 2 | 4 | 0.25 | 3 | 3 | on | 0.663 | 97.09 | yes |
+| 2 | 4 | 0.25 | 3 | 4 | off | 1.988 | 97.00 | no |
+| 2 | 4 | 0.25 | 3 | 4 | on | 1.988 | 97.09 | no |
+| 2 | 4 | 0.25 | 3 | 6 | off | 1.988 | 97.09 | no |
+| 2 | 4 | 0.25 | 3 | 6 | on | 1.988 | 97.18 | no |
+| 2 | 4 | 0.25 | 3 | 8 | off | 1.988 | 97.09 | no |
+| 2 | 4 | 0.25 | 3 | 8 | on | 1.988 | 97.18 | no |
+| 2 | 4 | 0.25 | 3 | None | off | 1.988 | 97.09 | no |
+| 2 | 4 | 0.25 | 3 | None | on | 1.988 | 97.18 | no |
+| 4 | 0 | 0 | 2 | 3 | off | 1.325 | 99.51 | no |
+| 4 | 0 | 0 | 2 | 3 | on | 1.325 | 99.61 | no |
+| 4 | 0 | 0 | 2 | 4 | off | 1.325 | 99.51 | no |
+| 4 | 0 | 0 | 2 | 4 | on | 1.325 | 99.61 | no |
+| 4 | 0 | 0 | 2 | 6 | off | 1.988 | 99.51 | no |
+| 4 | 0 | 0 | 2 | 6 | on | 1.988 | 99.61 | no |
+| 4 | 0 | 0 | 2 | 8 | off | 1.988 | 99.51 | no |
+| 4 | 0 | 0 | 2 | 8 | on | 1.988 | 99.61 | no |
+| 4 | 0 | 0 | 2 | None | off | 1.988 | 99.51 | no |
+| 4 | 0 | 0 | 2 | None | on | 1.988 | 99.61 | no |
+| 4 | 0 | 0 | 3 | 3 | off | 0.663 | 97.21 | yes |
+| 4 | 0 | 0 | 3 | 3 | on | 0.663 | 97.30 | yes |
+| 4 | 0 | 0 | 3 | 4 | off | 0.663 | 97.21 | yes |
+| 4 | 0 | 0 | 3 | 4 | on | 0.663 | 97.30 | yes |
+| 4 | 0 | 0 | 3 | 6 | off | 1.325 | 97.21 | no |
+| 4 | 0 | 0 | 3 | 6 | on | 1.325 | 97.30 | no |
+| 4 | 0 | 0 | 3 | 8 | off | 1.325 | 97.21 | no |
+| 4 | 0 | 0 | 3 | 8 | on | 1.325 | 97.30 | no |
+| 4 | 0 | 0 | 3 | None | off | 1.325 | 97.21 | no |
+| 4 | 0 | 0 | 3 | None | on | 1.325 | 97.30 | no |
+| 4 | 0 | 0.25 | 2 | 3 | off | 1.325 | 99.51 | no |
+| 4 | 0 | 0.25 | 2 | 3 | on | 1.325 | 99.61 | no |
+| 4 | 0 | 0.25 | 2 | 4 | off | 1.325 | 99.51 | no |
+| 4 | 0 | 0.25 | 2 | 4 | on | 1.325 | 99.61 | no |
+| 4 | 0 | 0.25 | 2 | 6 | off | 1.988 | 99.51 | no |
+| 4 | 0 | 0.25 | 2 | 6 | on | 1.988 | 99.61 | no |
+| 4 | 0 | 0.25 | 2 | 8 | off | 1.988 | 99.51 | no |
+| 4 | 0 | 0.25 | 2 | 8 | on | 1.988 | 99.61 | no |
+| 4 | 0 | 0.25 | 2 | None | off | 1.988 | 99.51 | no |
+| 4 | 0 | 0.25 | 2 | None | on | 1.988 | 99.61 | no |
+| 4 | 0 | 0.25 | 3 | 3 | off | 0.663 | 97.21 | yes |
+| 4 | 0 | 0.25 | 3 | 3 | on | 0.663 | 97.30 | yes |
+| 4 | 0 | 0.25 | 3 | 4 | off | 0.663 | 97.21 | yes |
+| 4 | 0 | 0.25 | 3 | 4 | on | 0.663 | 97.30 | yes |
+| 4 | 0 | 0.25 | 3 | 6 | off | 1.325 | 97.21 | no |
+| 4 | 0 | 0.25 | 3 | 6 | on | 1.325 | 97.30 | no |
+| 4 | 0 | 0.25 | 3 | 8 | off | 1.325 | 97.21 | no |
+| 4 | 0 | 0.25 | 3 | 8 | on | 1.325 | 97.30 | no |
+| 4 | 0 | 0.25 | 3 | None | off | 1.325 | 97.21 | no |
+| 4 | 0 | 0.25 | 3 | None | on | 1.325 | 97.30 | no |
+| 4 | 2 | 0 | 2 | 3 | off | 0.663 | 99.39 | yes |
+| 4 | 2 | 0 | 2 | 3 | on | 0.663 | 99.48 | yes |
+| 4 | 2 | 0 | 2 | 4 | off | 0.663 | 99.39 | yes |
+| 4 | 2 | 0 | 2 | 4 | on | 0.663 | 99.48 | yes |
+| 4 | 2 | 0 | 2 | 6 | off | 1.325 | 99.39 | no |
+| 4 | 2 | 0 | 2 | 6 | on | 1.325 | 99.48 | no |
+| 4 | 2 | 0 | 2 | 8 | off | 1.325 | 99.39 | no |
+| 4 | 2 | 0 | 2 | 8 | on | 1.325 | 99.48 | no |
+| 4 | 2 | 0 | 2 | None | off | 1.325 | 99.39 | no |
+| 4 | 2 | 0 | 2 | None | on | 1.325 | 99.48 | no |
+| 4 | 2 | 0 | 3 | 3 | off | 0.663 | 97.09 | yes |
+| 4 | 2 | 0 | 3 | 3 | on | 0.663 | 97.18 | yes |
+| 4 | 2 | 0 | 3 | 4 | off | 0.663 | 97.09 | yes |
+| 4 | 2 | 0 | 3 | 4 | on | 0.663 | 97.18 | yes |
+| 4 | 2 | 0 | 3 | 6 | off | 1.325 | 97.09 | no |
+| 4 | 2 | 0 | 3 | 6 | on | 1.325 | 97.18 | no |
+| 4 | 2 | 0 | 3 | 8 | off | 1.325 | 97.09 | no |
+| 4 | 2 | 0 | 3 | 8 | on | 1.325 | 97.18 | no |
+| 4 | 2 | 0 | 3 | None | off | 1.325 | 97.09 | no |
+| 4 | 2 | 0 | 3 | None | on | 1.325 | 97.18 | no |
+| 4 | 2 | 0.25 | 2 | 3 | off | 0.663 | 99.39 | yes |
+| 4 | 2 | 0.25 | 2 | 3 | on | 0.663 | 99.48 | yes |
+| 4 | 2 | 0.25 | 2 | 4 | off | 0.663 | 99.39 | yes |
+| 4 | 2 | 0.25 | 2 | 4 | on | 0.663 | 99.48 | yes |
+| 4 | 2 | 0.25 | 2 | 6 | off | 1.325 | 99.39 | no |
+| 4 | 2 | 0.25 | 2 | 6 | on | 1.325 | 99.48 | no |
+| 4 | 2 | 0.25 | 2 | 8 | off | 1.325 | 99.39 | no |
+| 4 | 2 | 0.25 | 2 | 8 | on | 1.325 | 99.48 | no |
+| 4 | 2 | 0.25 | 2 | None | off | 1.325 | 99.39 | no |
+| 4 | 2 | 0.25 | 2 | None | on | 1.325 | 99.48 | no |
+| 4 | 2 | 0.25 | 3 | 3 | off | 0.663 | 97.09 | yes |
+| 4 | 2 | 0.25 | 3 | 3 | on | 0.663 | 97.18 | yes |
+| 4 | 2 | 0.25 | 3 | 4 | off | 0.663 | 97.09 | yes |
+| 4 | 2 | 0.25 | 3 | 4 | on | 0.663 | 97.18 | yes |
+| 4 | 2 | 0.25 | 3 | 6 | off | 1.325 | 97.09 | no |
+| 4 | 2 | 0.25 | 3 | 6 | on | 1.325 | 97.18 | no |
+| 4 | 2 | 0.25 | 3 | 8 | off | 1.325 | 97.09 | no |
+| 4 | 2 | 0.25 | 3 | 8 | on | 1.325 | 97.18 | no |
+| 4 | 2 | 0.25 | 3 | None | off | 1.325 | 97.09 | no |
+| 4 | 2 | 0.25 | 3 | None | on | 1.325 | 97.18 | no |
+| 4 | 4 | 0 | 2 | 3 | off | 0.663 | 99.18 | yes |
+| 4 | 4 | 0 | 2 | 3 | on | 0.663 | 99.27 | yes |
+| 4 | 4 | 0 | 2 | 4 | off | 0.663 | 99.18 | yes |
+| 4 | 4 | 0 | 2 | 4 | on | 0.663 | 99.27 | yes |
+| 4 | 4 | 0 | 2 | 6 | off | 1.325 | 99.18 | no |
+| 4 | 4 | 0 | 2 | 6 | on | 1.325 | 99.27 | no |
+| 4 | 4 | 0 | 2 | 8 | off | 1.325 | 99.21 | no |
+| 4 | 4 | 0 | 2 | 8 | on | 1.325 | 99.30 | no |
+| 4 | 4 | 0 | 2 | None | off | 1.325 | 99.21 | no |
+| 4 | 4 | 0 | 2 | None | on | 1.325 | 99.30 | no |
+| 4 | 4 | 0 | 3 | 3 | off | 0.663 | 96.91 | yes |
+| 4 | 4 | 0 | 3 | 3 | on | 0.663 | 97.00 | yes |
+| 4 | 4 | 0 | 3 | 4 | off | 0.663 | 96.91 | yes |
+| 4 | 4 | 0 | 3 | 4 | on | 0.663 | 97.00 | yes |
+| 4 | 4 | 0 | 3 | 6 | off | 1.325 | 96.91 | no |
+| 4 | 4 | 0 | 3 | 6 | on | 1.325 | 97.00 | no |
+| 4 | 4 | 0 | 3 | 8 | off | 1.325 | 96.94 | no |
+| 4 | 4 | 0 | 3 | 8 | on | 1.325 | 97.03 | no |
+| 4 | 4 | 0 | 3 | None | off | 1.325 | 96.94 | no |
+| 4 | 4 | 0 | 3 | None | on | 1.325 | 97.03 | no |
+| 4 | 4 | 0.25 | 2 | 3 | off | 0.663 | 99.21 | yes |
+| 4 | 4 | 0.25 | 2 | 3 | on | 0.663 | 99.30 | yes |
+| 4 | 4 | 0.25 | 2 | 4 | off | 0.663 | 99.21 | yes |
+| 4 | 4 | 0.25 | 2 | 4 | on | 0.663 | 99.30 | yes |
+| 4 | 4 | 0.25 | 2 | 6 | off | 1.325 | 99.21 | no |
+| 4 | 4 | 0.25 | 2 | 6 | on | 1.325 | 99.30 | no |
+| 4 | 4 | 0.25 | 2 | 8 | off | 1.325 | 99.24 | no |
+| 4 | 4 | 0.25 | 2 | 8 | on | 1.325 | 99.33 | no |
+| 4 | 4 | 0.25 | 2 | None | off | 1.325 | 99.24 | no |
+| 4 | 4 | 0.25 | 2 | None | on | 1.325 | 99.33 | no |
+| 4 | 4 | 0.25 | 3 | 3 | off | 0.663 | 96.94 | yes |
+| 4 | 4 | 0.25 | 3 | 3 | on | 0.663 | 97.03 | yes |
+| 4 | 4 | 0.25 | 3 | 4 | off | 0.663 | 96.94 | yes |
+| 4 | 4 | 0.25 | 3 | 4 | on | 0.663 | 97.03 | yes |
+| 4 | 4 | 0.25 | 3 | 6 | off | 1.325 | 96.94 | no |
+| 4 | 4 | 0.25 | 3 | 6 | on | 1.325 | 97.03 | no |
+| 4 | 4 | 0.25 | 3 | 8 | off | 1.325 | 96.97 | no |
+| 4 | 4 | 0.25 | 3 | 8 | on | 1.325 | 97.06 | no |
+| 4 | 4 | 0.25 | 3 | None | off | 1.325 | 96.97 | no |
+| 4 | 4 | 0.25 | 3 | None | on | 1.325 | 97.06 | no |
 
 ## dev
 
-| intended | runs | FP/1000 | sentences with FP % | recall % | median k | p90 k | within 4 % | avg ms |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| th | 3584 | 148.996 | 21.03 | 99.30 | 2 | 5 | 88.36 | 0.1319 |
-| en | 2936 | 0.681 | 0.06 | 98.91 | 2.0 | 3 | 98.60 | 0.0728 |
+| intended | runs | FP/1000 | sentences with FP % | recall % | caught typing % | only at space % | median typing k | p90 typing k | avg ms |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| th | 3584 | 0.000 | 0.00 | 99.75 | 91.55 | 8.20 | 2 | 3 | 0.0091 |
+| en | 2936 | 0.681 | 0.12 | 98.88 | 95.71 | 3.17 | 2.0 | 2 | 0.0041 |
+| neutral | 104 | 0.000 | 0.00 | n/a | n/a | n/a | None | None | 0.0037 |
 
 ### th worst false positives
 
-- run='รหัสการเข้าถึงได้ถูกบันทึกไปยังการตั้งค่าบัญชีของคุณแล้ว'; prefix='รห'; prev=th; score=15.111
-- run='รหัสผ่าน'; prefix='รห'; prev=th; score=15.111
-- run='รหัสผ่านเหล่านี้จะถูกแจ้งขอเมื่อเปิดใช้การเชื่อมข้อมูลพวงกุญแจกับคอมพิวเตอร์อื่นเพิ่มเติม'; prefix='รห'; prev=th; score=15.111
-- run='ฟื้นฟู'; prefix='ฟื'; prev=th; score=11.596
-- run='ฟื้นฟู'; prefix='ฟื'; prev=th; score=11.596
-- run='ทั้งหมด'; prefix='ทั'; prev=en; score=11.262
-- run='ทั้งนี้'; prefix='ทั'; prev=en; score=11.262
-- run='ทั่วโลกใน'; prefix='ทั'; prev=en; score=11.262
-- run='ทั่วไป'; prefix='ทั'; prev=th; score=11.262
-- run='สื่อ'; prefix='สื'; prev=th; score=9.988
-- run='สภาพแวดล้อม'; prefix='สภ'; prev=None; score=9.372
-- run='ฉัน'; prefix='ฉั'; prev=None; score=9.220
-- run='สัปดาห์'; prefix='สั'; prev=None; score=8.942
-- run='สัปดาห์'; prefix='สั'; prev=None; score=8.942
-- run='สัปดาห์'; prefix='สั'; prev=None; score=8.942
-- run='สัปดาห์'; prefix='สั'; prev=None; score=8.942
-- run='สัญญาณชีพตอนกลางคืน'; prefix='สั'; prev=th; score=8.942
-- run='สัญญาณชีพตอนกลางคืน'; prefix='สั'; prev=th; score=8.942
-- run='สั้น'; prefix='สั'; prev=th; score=8.942
-- run='กับ'; prefix='กั'; prev=en; score=8.613
-- run='กังหันลม'; prefix='กั'; prev=None; score=8.613
-- run='กันนาดา'; prefix='กั'; prev=None; score=8.613
-- run='กันสาดหน้าต่าง'; prefix='กั'; prev=None; score=8.613
-- run='กับ'; prefix='กั'; prev=None; score=8.613
-- run='กับ'; prefix='กั'; prev=None; score=8.613
+- none
 
 ### th misses
 
-- run='ถึง'; garbled="57'"; prev=en; score=0.000
-- run='ถึง'; garbled="57'"; prev=en; score=0.000
-- run='แทรก'; garbled='cmid'; prev=en; score=3.495
-- run='สำเนา'; garbled='legok'; prev=None; score=3.478
-- run='สำเนา'; garbled='legok'; prev=None; score=3.478
-- run='แนะนำ'; garbled='cotoe'; prev=None; score=2.698
-- run='ถึง'; garbled="57'"; prev=th; score=0.000
 - run='ณ'; garbled='I'; prev=th; score=-1.470
-- run='ชม'; garbled='=,'; prev=None; score=0.000
 - run='น'; garbled='o'; prev=th; score=2.573
 - run='น'; garbled='o'; prev=None; score=2.573
-- run='ชม'; garbled='=,'; prev=None; score=0.000
-- run='ใบ'; garbled='.['; prev=th; score=0.000
-- run='ใบ'; garbled='.['; prev=th; score=0.000
 - run='หนา'; garbled='sok'; prev=en; score=1.100
 - run='ก'; garbled='d'; prev=None; score=0.145
-- run='ถึง'; garbled="57'"; prev=th; score=0.000
 - run='ฮ'; garbled='V'; prev=th; score=0.432
 - run='ก'; garbled='d'; prev=None; score=0.145
 - run='ฮ'; garbled='V'; prev=th; score=0.432
 - run='กราฟ'; garbled='dika'; prev=None; score=0.704
-- run='กราฟิก'; garbled='dikabd'; prev=None; score=3.370
-- run='กราฟเส้น'; garbled='dikaglho'; prev=None; score=3.743
-- run='สั้น'; garbled='lyho'; prev=th; score=3.421
-- run='กำปั้น'; garbled='dexyho'; prev=None; score=3.652
 
 ### en worst false positives
 
-- run='iur'; prefix='iu'; prev=en; score=10.010
-- run='sinveni'; prefix='sinv'; prev=en; score=6.578
+- run='iur'; at=key 2; prev=en; score=12.015
+- run='lu'; at=space; prev=None; score=2.112
 
 ### en misses
 
@@ -102,6 +405,8 @@ Chosen config: `{"ctx_delta": 0.0, "dictionary_bonus": 0.0, "min_len": 2, "ortho
 - run='D'; garbled='ฏ'; prev=None; score=36.689
 - run='E'; garbled='ฎ'; prev=None; score=2.499
 - run='pe'; garbled='ยำ'; prev=en; score=1.132
+- run='Ewa'; garbled='ฎไฟ'; prev=None; score=0.733
+- run='Ewa'; garbled='ฎไฟ'; prev=None; score=0.733
 - run='K'; garbled='ษ'; prev=None; score=31.998
 - run='L'; garbled='ศ'; prev=None; score=1.505
 - run='a'; garbled='ฟ'; prev=en; score=7.594
@@ -109,7 +414,7 @@ Chosen config: `{"ctx_delta": 0.0, "dictionary_bonus": 0.0, "min_len": 2, "ortho
 - run='MMM'; garbled='???'; prev=None; score=0.000
 - run='R'; garbled='ฑ'; prev=None; score=3.572
 - run='iur'; garbled='รีพ'; prev=en; score=-4.659
-- run='Vit'; garbled='ฮระ'; prev=en; score=3.683
+- run='fuga.'; garbled='ดีเฟใ'; prev=en; score=1.637
 - run='S'; garbled='ฆ'; prev=None; score=5.809
 - run='T'; garbled='ธ'; prev=None; score=0.157
 - run='X'; garbled=')'; prev=None; score=0.000
@@ -118,100 +423,63 @@ Chosen config: `{"ctx_delta": 0.0, "dictionary_bonus": 0.0, "min_len": 2, "ortho
 - run='d'; garbled='ก'; prev=None; score=-0.145
 - run='dd'; garbled='กก'; prev=None; score=-1.023
 - run='MMM'; garbled='???'; prev=en; score=0.000
-- run='f'; garbled='ด'; prev=None; score=1.347
-- run='g'; garbled='เ'; prev=None; score=23.403
+
+### neutral worst false positives
+
+- none
+
+### neutral misses
+
+- none
 
 ## test
 
-| intended | runs | FP/1000 | sentences with FP % | recall % | median k | p90 k | within 4 % | avg ms |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| th | 2811 | 209.178 | 30.83 | 98.01 | 3 | 4 | 91.14 | 0.0898 |
-| en | 5162 | 3.100 | 0.64 | 96.55 | 2.0 | 3 | 96.18 | 0.0346 |
+| intended | runs | FP/1000 | sentences with FP % | recall % | caught typing % | only at space % | median typing k | p90 typing k | avg ms |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| th | 2811 | 0.356 | 0.06 | 99.89 | 87.69 | 12.20 | 2 | 3 | 0.0124 |
+| en | 5162 | 11.817 | 2.45 | 96.73 | 94.56 | 2.17 | 2 | 2 | 0.0046 |
+| neutral | 1311 | 0.000 | 0.00 | n/a | n/a | n/a | None | None | 0.0033 |
 
 ### th worst false positives
 
-- run='ทั้งหมด'; prefix='ทั'; prev=None; score=11.262
-- run='ทั้งหมด'; prefix='ทั'; prev=en; score=11.262
-- run='ทั้งวัน'; prefix='ทั'; prev=None; score=11.262
-- run='ทั้งหมด'; prefix='ทั'; prev=None; score=11.262
-- run='ทั้งหมดตั้งแต่แรก'; prefix='ทั'; prev=en; score=11.262
-- run='สื่อสารสองทิศทางพร้อมกัน'; prefix='สื'; prev=en; score=9.988
-- run='สื่อสารสองทิศทางสลับกัน'; prefix='สื'; prev=en; score=9.988
-- run='สื่อสารสองทิศทางพร้อมกัน'; prefix='สื'; prev=en; score=9.988
-- run='สื่อสารสองทิศทางสลับกัน'; prefix='สื'; prev=en; score=9.988
-- run='สื่อสารสองทิศทางพร้อมกัน'; prefix='สื'; prev=en; score=9.988
-- run='สื่อสารสองทิศทางสลับกัน'; prefix='สื'; prev=en; score=9.988
-- run='พื้นที่ไม่เพียงพอ'; prefix='พื'; prev=th; score=9.968
-- run='สัปดาห์'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์ที่ผ่านมา'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์ที่ผ่านมา'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์ที่ผ่านมา'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์ที่ผ่านมา'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์ที่ผ่านมา'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์ที่ผ่านมา'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์ที่ผ่านมา'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์ที่ผ่านมา'; prefix='สั'; prev=th; score=8.942
-- run='สัปดาห์'; prefix='สั'; prev=th; score=8.942
+- run='กำนดไฟล์'; at=key 3; prev=en; score=4.700
 
 ### th misses
 
-- run='เธรด'; garbled='gTif'; prev=None; score=3.702
-- run='ถึง'; garbled="57'"; prev=en; score=0.000
-- run='ถึง'; garbled="57'"; prev=th; score=0.000
-- run='ลบ'; garbled=']['; prev=th; score=0.000
-- run='เกิน'; garbled='gdbo'; prev=th; score=3.772
-- run='ใบ'; garbled='.['; prev=th; score=0.000
-- run='ใบ'; garbled='.['; prev=th; score=0.000
-- run='แก้โดย'; garbled='cdhFfp'; prev=None; score=3.430
-- run='แนะนำ'; garbled='cotoe'; prev=None; score=2.698
-- run='กำนดไฟล์'; garbled='deofwa]N'; prev=en; score=2.724
-- run='ถึง'; garbled="57'"; prev=None; score=0.000
 - run='น'; garbled='o'; prev=None; score=2.573
-- run='ดีแคร์'; garbled='fuc8iN'; prev=th; score=2.572
-- run='มม'; garbled=',,'; prev=en; score=0.000
-- run='มม'; garbled=',,'; prev=en; score=0.000
-- run='มม'; garbled=',,'; prev=None; score=0.000
-- run='มม'; garbled=',,'; prev=en; score=0.000
-- run='มม'; garbled=',,'; prev=None; score=0.000
-- run='มม'; garbled=',,'; prev=en; score=0.000
-- run='มม'; garbled=',,'; prev=en; score=0.000
-- run='มม'; garbled=',,'; prev=None; score=0.000
-- run='มม'; garbled=',,'; prev=None; score=0.000
-- run='มม'; garbled=',,'; prev=en; score=0.000
-- run='มม'; garbled=',,'; prev=en; score=0.000
-- run='มม'; garbled=',,'; prev=en; score=0.000
+- run='ปณ'; garbled='xI'; prev=th; score=1.051
+- run='เหรินหมินปี้'; garbled='gsibos,boxuh'; prev=th; score=1.746
 
 ### en worst false positives
 
-- run='i5'; prefix='i5'; prev=en; score=15.326
-- run='i5'; prefix='i5'; prev=en; score=15.326
-- run='i9'; prefix='i9'; prev=en; score=7.608
-- run='i9'; prefix='i9'; prev=en; score=7.608
-- run='i9'; prefix='i9'; prev=en; score=7.608
-- run='-v'; prefix='-v'; prev=None; score=6.261
-- run='-v'; prefix='-v'; prev=None; score=6.261
-- run='-v'; prefix='-v'; prev=None; score=6.261
-- run='-v'; prefix='-v'; prev=None; score=6.261
-- run='-vv'; prefix='-v'; prev=None; score=6.261
-- run='E5'; prefix='E5'; prev=en; score=6.079
-- run='E5'; prefix='E5'; prev=en; score=6.079
-- run='E5'; prefix='E5'; prev=en; score=6.079
-- run='E5'; prefix='E5'; prev=en; score=6.079
-- run='[user(s)]'; prefix='[u'; prev=en; score=5.246
-- run='-k'; prefix='-k'; prev=None; score=4.222
+- run='i5'; at=key 2; prev=en; score=15.174
+- run='i5'; at=key 2; prev=en; score=15.174
+- run='i9'; at=key 2; prev=en; score=9.788
+- run='i9'; at=key 2; prev=en; score=9.788
+- run='i9'; at=key 2; prev=en; score=9.788
+- run='i7'; at=key 2; prev=en; score=8.004
+- run='i7'; at=key 2; prev=en; score=8.004
+- run='-v'; at=key 2; prev=None; score=7.722
+- run='-v'; at=key 2; prev=None; score=7.722
+- run='-v'; at=key 2; prev=None; score=7.722
+- run='-v'; at=key 2; prev=None; score=7.722
+- run='-vv'; at=key 2; prev=None; score=7.722
+- run='E5'; at=key 2; prev=en; score=7.281
+- run='E5'; at=key 2; prev=en; score=7.281
+- run='E5'; at=key 2; prev=en; score=7.281
+- run='E5'; at=key 2; prev=en; score=7.281
+- run='-k'; at=key 2; prev=None; score=5.613
+- run='-j'; at=key 2; prev=None; score=5.320
+- run='-u'; at=key 2; prev=None; score=5.178
+- run='-u'; at=key 2; prev=None; score=5.178
+- run='-u'; at=key 2; prev=None; score=5.178
+- run='-u'; at=key 2; prev=None; score=5.178
+- run='-u'; at=key 2; prev=None; score=5.178
+- run='-u'; at=key 2; prev=None; score=5.178
+- run='-u'; at=key 2; prev=None; score=5.178
 
 ### en misses
 
-- run='-I'; garbled='ขณ'; prev=None; score=2.828
-- run='-I'; garbled='ขณ'; prev=None; score=2.828
-- run='-I'; garbled='ขณ'; prev=None; score=2.828
-- run='-h'; garbled='ข้'; prev=None; score=3.022
-- run='-h'; garbled='ข้'; prev=None; score=3.022
-- run='-h'; garbled='ข้'; prev=None; score=3.022
-- run='-h'; garbled='ข้'; prev=None; score=3.022
 - run='-i'; garbled='ขร'; prev=None; score=1.434
 - run='-i'; garbled='ขร'; prev=None; score=1.434
 - run='-i'; garbled='ขร'; prev=None; score=1.434
@@ -230,59 +498,47 @@ Chosen config: `{"ctx_delta": 0.0, "dictionary_bonus": 0.0, "min_len": 2, "ortho
 - run='-o'; garbled='ขน'; prev=None; score=-3.433
 - run='-o'; garbled='ขน'; prev=None; score=-3.433
 - run='-o'; garbled='ขน'; prev=None; score=-3.433
+- run='-o'; garbled='ขน'; prev=None; score=-3.433
+- run='-o'; garbled='ขน'; prev=None; score=-3.433
+- run='-o'; garbled='ขน'; prev=None; score=-3.433
+- run='-o'; garbled='ขน'; prev=None; score=-3.433
+- run='-o'; garbled='ขน'; prev=None; score=-3.433
+- run='-o'; garbled='ขน'; prev=None; score=-3.433
+- run='-o'; garbled='ขน'; prev=None; score=-3.433
+
+### neutral worst false positives
+
+- none
+
+### neutral misses
+
+- none
 
 ## chat
 
-| intended | runs | FP/1000 | sentences with FP % | recall % | median k | p90 k | within 4 % | avg ms |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| th | 360 | 186.111 | 38.96 | 95.00 | 3.0 | 4 | 85.83 | 0.0577 |
-| en | 348 | 0.000 | 0.00 | 96.55 | 2.0 | 3 | 96.26 | 0.0324 |
+| intended | runs | FP/1000 | sentences with FP % | recall % | caught typing % | only at space % | median typing k | p90 typing k | avg ms |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| th | 360 | 19.444 | 4.55 | 97.78 | 88.89 | 8.89 | 2.0 | 3 | 0.0129 |
+| en | 348 | 0.000 | 0.00 | 97.13 | 87.93 | 9.20 | 2.0 | 3 | 0.0061 |
+| neutral | 0 | n/a | n/a | n/a | n/a | n/a | None | None | 0.0000 |
 
 ### th worst false positives
 
-- run='งั้นเอาตามนี้เลยค่ะ'; prefix='งั'; prev=None; score=11.305
-- run='สัปดาห์นี้เพิ่มขึ้น'; prefix='สั'; prev=en; score=8.942
-- run='สั้นๆ'; prefix='สั'; prev=en; score=8.942
-- run='กับทีม'; prefix='กั'; prev=en; score=8.613
-- run='กันแป๊บนึงได้ไหม'; prefix='กั'; prev=en; score=8.613
-- run='กับลูกค้าตอนบ่ายสอง'; prefix='กั'; prev=en; score=8.613
-- run='กับทีมตอนเที่ยง'; prefix='กั'; prev=en; score=8.613
-- run='กับ'; prefix='กั'; prev=en; score=8.613
-- run='ให้พี่ก่อนเที่ยงได้มั้ย'; prefix='ให'; prev=en; score=8.485
-- run='ให้'; prefix='ให'; prev=en; score=8.485
-- run='ให้แล้วนะ'; prefix='ให'; prev=en; score=8.485
-- run='ให้ในแชต'; prefix='ให'; prev=en; score=8.485
-- run='ให้หน่อยนะคะ'; prefix='ให'; prev=en; score=8.485
-- run='ให้ลูกค้าดูได้เลยค่ะ'; prefix='ให'; prev=en; score=8.485
-- run='ให้ครบ'; prefix='ให'; prev=en; score=8.485
-- run='ให้หน่อย'; prefix='ให'; prev=en; score=8.485
-- run='ให้แล้วนะ'; prefix='ให'; prev=en; score=8.485
-- run='ให้ผู้บริหาร'; prefix='ให'; prev=en; score=8.485
-- run='ให้ด้วย'; prefix='ให'; prev=en; score=8.485
-- run='ให้ทาง'; prefix='ให'; prev=en; score=8.485
-- run='ให้หน่อย'; prefix='ให'; prev=en; score=8.485
-- run='ให้ด้วยค่ะ'; prefix='ให'; prev=en; score=8.485
-- run='ให้หน่อย'; prefix='ให'; prev=en; score=8.485
-- run='ให้ดูก่อน'; prefix='ให'; prev=en; score=8.485
-- run='ใหญ่ด้วยครับ'; prefix='ให'; prev=en; score=8.485
+- run='นะครับ'; at=key 2; prev=en; score=8.911
+- run='นะ'; at=key 2; prev=en; score=8.911
+- run='นะคะ'; at=key 2; prev=en; score=8.911
+- run='นะ'; at=key 2; prev=th; score=8.911
+- run='นะ'; at=key 2; prev=en; score=8.911
+- run='นะคะ'; at=key 2; prev=en; score=8.911
+- run='งั้นเอาตามนี้เลยค่ะ'; at=key 2; prev=None; score=5.675
 
 ### th misses
 
 - run='ทำ'; garbled='me'; prev=None; score=-0.305
-- run='งบ'; garbled="'["; prev=None; score=0.000
-- run='ค่ะ'; garbled='8jt'; prev=th; score=1.257
 - run='นะ'; garbled='ot'; prev=en; score=-3.511
-- run='งบ'; garbled="'["; prev=None; score=0.000
-- run='นัดคุย'; garbled='oyf86p'; prev=None; score=3.304
 - run='นะคะ'; garbled='ot8t'; prev=en; score=1.840
 - run='นะ'; garbled='ot'; prev=th; score=-3.511
-- run='ค่ะ'; garbled='8jt'; prev=th; score=1.257
-- run='ค่ะ'; garbled='8jt'; prev=en; score=1.257
-- run='ค่ะ'; garbled='8jt'; prev=en; score=1.257
 - run='นะ'; garbled='ot'; prev=en; score=-3.511
-- run='ค่ะ'; garbled='8jt'; prev=en; score=1.257
-- run='แผน'; garbled='czo'; prev=None; score=3.841
-- run='ค่ะ'; garbled='8jt'; prev=en; score=1.257
 - run='นะคะ'; garbled='ot8t'; prev=en; score=1.840
 - run='เย้'; garbled='gph'; prev=th; score=-1.603
 - run='แป๊บนึงนะ'; garbled="cxU[o7'ot"; prev=en; score=1.622
@@ -293,8 +549,6 @@ Chosen config: `{"ctx_delta": 0.0, "dictionary_bonus": 0.0, "min_len": 2, "ortho
 
 ### en misses
 
-- run='crop'; garbled='แพนย'; prev=th; score=3.811
-- run='group'; garbled='เพนีย'; prev=th; score=3.130
 - run='me'; garbled='ทำ'; prev=en; score=0.305
 - run='I'; garbled='ณ'; prev=None; score=1.470
 - run='I'; garbled='ณ'; prev=None; score=1.470
@@ -305,7 +559,34 @@ Chosen config: `{"ctx_delta": 0.0, "dictionary_bonus": 0.0, "min_len": 2, "ortho
 - run='I'; garbled='ณ'; prev=None; score=1.470
 - run='a'; garbled='ฟ'; prev=en; score=7.594
 - run='a'; garbled='ฟ'; prev=en; score=7.594
+
+### neutral worst false positives
+
+- none
+
+### neutral misses
+
+- none
+
+## Test and chat comparison
+
+| set | intended | version | FP/1000 | recall % | caught typing % | only at space % |
+|---|---|---|---:|---:|---:|---:|
+| test | th | v1 baseline | 209.18 | 98.01 | n/a | n/a |
+| test | en | v1 baseline | 3.10 | 96.55 | n/a | n/a |
+| test | th | v2 max_check_len=null | 0.356 | 99.89 | 98.72 | 1.17 |
+| test | en | v2 max_check_len=null | 11.817 | 96.73 | 95.99 | 0.74 |
+| test | neutral | v2 max_check_len=null | 0.000 | n/a | n/a | n/a |
+| test | th | v2 chosen max_check_len | 0.356 | 99.89 | 87.69 | 12.20 |
+| test | en | v2 chosen max_check_len | 11.817 | 96.73 | 94.56 | 2.17 |
+| test | neutral | v2 chosen max_check_len | 0.000 | n/a | n/a | n/a |
+| chat | th | v1 baseline | 186.11 | 95.00 | n/a | n/a |
+| chat | en | v1 baseline | 0.00 | 96.55 | n/a | n/a |
+| chat | th | v2 max_check_len=null | 19.444 | 97.78 | 96.67 | 1.11 |
+| chat | en | v2 max_check_len=null | 0.000 | 97.13 | 93.68 | 3.45 |
+| chat | th | v2 chosen max_check_len | 19.444 | 97.78 | 88.89 | 8.89 |
+| chat | en | v2 chosen max_check_len | 0.000 | 97.13 | 87.93 | 9.20 |
 
 ## Known weaknesses
 
-Corpus is limited to strings exposed by local macOS localization tables; short prefixes and names absent from training remain ambiguous. Run boundaries are heuristic and dictionary coverage depends on `/usr/share/dict/words`. Chat data is an illustrative fixed sample, not a representative user study.
+The dev FP cap did not generalize fully: test English is 11.817 FP/1,000 versus the v1 baseline of 3.10, and chat Thai is 19.444/1,000. Limiting checks to three keys reduces typing checks but does not change run-level FP, since the complete check still runs at space. The n-gram models come from limited local-language corpora, so short names, abbreviations, and uncommon Thai words remain ambiguous. Neutral has no chat candidates, so its chat FP rate is n/a. Run boundaries are heuristic, and chat is a small illustrative sample rather than a representative user study.

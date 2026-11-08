@@ -25,5 +25,13 @@ class DetectorTests(unittest.TestCase):
         self.assertEqual(self.det.decide("SEO", "th")[0], "keep")
         self.assertEqual(self.det.decide("8iy[", "th")[0], "convert")
 
+    def test_prefix_and_complete_modes(self):
+        default = Detector()
+        self.assertEqual(default.decide("ทั", None)[0], "keep")
+        self.assertEqual(default.decide("ทั้งหมด", "th", complete=True)[0], "keep")
+        self.assertEqual(default.decide("ๆ", "th")[0], "keep")
+        self.assertEqual(default.decide("my", "en", complete=True)[0], "keep")
+        self.assertEqual(default.decide("w,j", "th", complete=True)[0], "convert")
+
 
 if __name__ == "__main__": unittest.main()

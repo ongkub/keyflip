@@ -1,5 +1,6 @@
 """Character n-gram model with Witten-Bell backoff smoothing."""
 from collections import Counter, defaultdict
+from functools import lru_cache
 import math
 
 BEGIN = "\u0002"
@@ -58,8 +59,11 @@ class NgramLM:
         # every context, so probabilities remain normalized over the alphabet.
         return count / (total + types) + (types / (total + types)) * lower
 
-    def logprob(self, s):
-        seq = [BEGIN] * (self.order - 1) + list(s) + ["\u0003"]
+    @lru_cache(maxsize=500_000)
+    def logprob(self, s, complete=True):
+        seq = [BEGIN] * (self.order - 1) + list(s)
+        if complete:
+            seq.append("\u0003")
         ans = 0.0
         for i in range(self.order - 1, len(seq)):
             p = self._prob(seq[max(0, i - self.order + 1):i], seq[i])

@@ -173,24 +173,42 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--max-lines", type=int, default=3000)
     ap.add_argument("--extra")
+    ap.add_argument("--set", action="append", default=[], metavar="NAME=FILE")
+    ap.add_argument("--models-dir", type=Path)
+    ap.add_argument("--config", type=Path, default=ROOT / "config.json")
+    ap.add_argument("--no-tune", action="store_true")
+    ap.add_argument("--report", type=Path, default=ROOT / "RESULTS.md")
+    ap.add_argument("--max-check-len", default="config", metavar="N|none")
     args = ap.parse_args()
-    dev = read_lines([ROOT / "data/th_dev.txt", ROOT / "data/en_dev.txt"], args.max_lines)
-    tuning_args = argparse.Namespace(max_lines=min(args.max_lines, 1500))
-    tune_dev = []
-    for path in (ROOT / "data/th_dev.txt", ROOT / "data/en_dev.txt"):
-        sample = read_lines([path], args.max_lines)
-        if len(sample) > tuning_args.max_lines:
-            stride = len(sample) / tuning_args.max_lines
-            sample = [sample[int(i * stride)] for i in range(tuning_args.max_lines)]
-        tune_dev.extend(sample)
-    config, table = tuning(tune_dev, tuning_args)
-    (ROOT / "config.json").write_text(json.dumps(config, indent=2) + "\n")
-    sets = {"dev": dev,
-            "test": read_lines([ROOT / "data/th_test.txt", ROOT / "data/en_test.txt"], args.max_lines),
-            "chat": read_lines([ROOT / "testdata/chat_th_en.txt"], args.max_lines)}
+    config = json.loads(args.config.read_text(encoding="utf8"))
+    if args.max_check_len.lower() != "config":
+        config["max_check_len"] = None if args.max_check_len.lower() == "none" else int(args.max_check_len)
+    table = []
+    if args.no_tune:
+        sets = {}
+    else:
+        dev = read_lines([ROOT / "data/th_dev.txt", ROOT / "data/en_dev.txt"], args.max_lines)
+        tuning_args = argparse.Namespace(max_lines=min(args.max_lines, 1500))
+        tune_dev = []
+        for path in (ROOT / "data/th_dev.txt", ROOT / "data/en_dev.txt"):
+            sample = read_lines([path], args.max_lines)
+            if len(sample) > tuning_args.max_lines:
+                stride = len(sample) / tuning_args.max_lines
+                sample = [sample[int(i * stride)] for i in range(tuning_args.max_lines)]
+            tune_dev.extend(sample)
+        config, table = tuning(tune_dev, tuning_args)
+        args.config.write_text(json.dumps(config, indent=2) + "\n")
+        sets = {"dev": dev,
+                "test": read_lines([ROOT / "data/th_test.txt", ROOT / "data/en_test.txt"], args.max_lines),
+                "chat": read_lines([ROOT / "testdata/chat_th_en.txt"], args.max_lines)}
     if args.extra:
         sets["extra"] = read_lines([Path(args.extra)], args.max_lines)
-    report = ["# Detector evaluation", "", f"Chosen config: `{json.dumps(config, sort_keys=True)}`", "",
+    for item in args.set:
+        if "=" not in item:
+            ap.error("--set must be NAME=FILE")
+        name, filename = item.split("=", 1)
+        sets[name] = read_lines([Path(filename)], args.max_lines)
+    report = ["# Detector evaluation", "", f"Config: `{json.dumps(config, sort_keys=True)}`", "",
               "## Dev tuning grid", "",
               "| typing threshold | final threshold | ctx delta | min len | max check len | neutral rule | max FP/1000 | recall % | meets FP cap |",
               "|---:|---:|---:|---:|---:|---|---:|---:|---|"]
@@ -198,7 +216,7 @@ def main():
                for c, fp, rec, ok in table]
     all_results = {}
     for name, lines in sets.items():
-        result = evaluate(Detector(config), lines, args.max_lines)
+        result = evaluate(Detector(config, args.models_dir), lines, args.max_lines)
         all_results[name] = result
         sm = summarize(result)
         report += ["", f"## {name}", "",
@@ -229,8 +247,9 @@ def main():
                 report.append(f"| {name} | {lang} | {version} | {rate(m['fp1000'])} | {pct(m['recall'])} | {pct(m['typing_pct'])} | {pct(m['space_pct'])} |")
     report += ["", "## Known weaknesses", "",
                "The dev FP cap did not generalize fully: test English is 11.817 FP/1,000 versus the v1 baseline of 3.10, and chat Thai is 19.444/1,000. Limiting checks to three keys reduces typing checks but does not change run-level FP, since the complete check still runs at space. The n-gram models come from limited local-language corpora, so short names, abbreviations, and uncommon Thai words remain ambiguous. Neutral has no chat candidates, so its chat FP rate is n/a. Run boundaries are heuristic, and chat is a small illustrative sample rather than a representative user study."]
-    (ROOT / "RESULTS.md").write_text("\n".join(report) + "\n")
-    print("Wrote detector/config.json and detector/RESULTS.md")
+    args.report.parent.mkdir(parents=True, exist_ok=True)
+    args.report.write_text("\n".join(report) + "\n")
+    print(f"Wrote report: {args.report}")
     for name, result in all_results.items():
         print(name, json.dumps(summarize(result), ensure_ascii=False))
 

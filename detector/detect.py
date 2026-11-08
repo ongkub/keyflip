@@ -44,7 +44,7 @@ def thai_orthography_ok(s):
 class Detector:
     _MODEL_CACHE = {}
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, models_dir=None):
         self.config = {"threshold": 0.65, "final_threshold": 0.65,
                        "ctx_delta": 0.15, "min_len": 2,
                        "max_check_len": None, "neutral_rule": False,
@@ -58,8 +58,9 @@ class Detector:
         else:
             self.config.update(config)
         self.lms = {}
+        models_dir = Path(models_dir) if models_dir is not None else ROOT / "models"
         for lang in ("th", "en"):
-            path = ROOT / "models" / f"{lang}.json.gz"
+            path = models_dir / f"{lang}.json.gz"
             if path.exists():
                 key = str(path.resolve())
                 if key not in self._MODEL_CACHE:

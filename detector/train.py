@@ -2,6 +2,7 @@ import gzip
 import json
 import re
 import sys
+import argparse
 from pathlib import Path
 from keymap import runs
 from ngram import NgramLM
@@ -19,16 +20,27 @@ def load_runs(path, language):
 
 
 def main():
-    data, models = ROOT / "data", ROOT / "models"
-    models.mkdir(exist_ok=True)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--personal", type=Path)
+    ap.add_argument("--personal-weight", type=int, default=5)
+    ap.add_argument("--models-out", type=Path, default=ROOT / "models")
+    args = ap.parse_args()
+    data, models = ROOT / "data", args.models_out
+    models.mkdir(parents=True, exist_ok=True)
     thai = NgramLM(5)
     for value in load_runs(data / "th_train.txt", "th"):
         thai.add(value)
+    personal_rows = load_runs(args.personal, "th") if args.personal else []
+    for value in personal_rows:
+        thai.add(value, args.personal_weight)
     thai.finalize()
     english = NgramLM(5)
     en_words = load_runs(data / "en_train.txt", "en") + load_runs(data / "th_train.txt", "en")
     for value in en_words:
         english.add(value.lower())
+    personal_en = load_runs(args.personal, "en") if args.personal else []
+    for value in personal_en:
+        english.add(value.lower(), args.personal_weight)
     if DICT.exists():
         for value in DICT.read_text(errors="ignore").splitlines():
             value = value.strip().lower()

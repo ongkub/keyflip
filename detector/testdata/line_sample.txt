@@ -1,0 +1,11 @@
+[LINE] Chat history
+2026.11.07 Saturday
+21:05	Me Test	สวัสดีครับ
+21:06	Friend A	[Sticker]
+21:07	Me Test	"วันนี้ลองพิมพ์ภาษาไทย
+แล้วต่อด้วย English mixed"
+21:08	Me Test	ดูเพิ่ม https://example.test/path
+21:09	Friend B	[Photo]
+21:10	Me Test	ยกเลิกการส่งข้อความ
+21:11	Me Test	นะครับ งั้นไปกัน
+Saved on: 2026.11.08

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeyFlip: แก้คำที่พิมพ์ผิดภาษาอัตโนมัติ ไทย อังกฤษ</title>
+  <meta name="description" content="ลืมเปลี่ยนภาษาแล้วพิมพ์ออกมาเป็น l;ylfu? KeyFlip แก้เป็น สวัสดี ให้ทันทีและสลับแป้นให้เอง ใช้ได้ทั้งไทยเป็นอังกฤษและอังกฤษเป็นไทย ฟรีบน Mac และ Windows">
+  <link rel="canonical" href="https://keyflip.sparkth.io/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#F7F8FA">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://keyflip.sparkth.io/">
+  <meta property="og:title" content="KeyFlip: แก้คำที่พิมพ์ผิดภาษาอัตโนมัติ ไทย อังกฤษ">
+  <meta property="og:description" content="ลืมเปลี่ยนภาษาแล้วพิมพ์ออกมาเป็น l;ylfu? KeyFlip แก้เป็น สวัสดี ให้ทันทีและสลับแป้นให้เอง ใช้ได้ทั้งไทยเป็นอังกฤษและอังกฤษเป็นไทย ฟรีบน Mac และ Windows">
+  <meta property="og:image" content="https://keyflip.sparkth.io/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="KeyFlip: แก้คำที่พิมพ์ผิดภาษาอัตโนมัติ ไทย อังกฤษ">
+  <meta name="twitter:description" content="ลืมเปลี่ยนภาษาแล้วพิมพ์ออกมาเป็น l;ylfu? KeyFlip แก้เป็น สวัสดี ให้ทันทีและสลับแป้นให้เอง ใช้ได้ทั้งไทยเป็นอังกฤษและอังกฤษเป็นไทย ฟรีบน Mac และ Windows">
+  <meta name="twitter:image" content="https://keyflip.sparkth.io/assets/og.png">
+
+  <!-- Preload Critical Thai Subsets -->
+  <link rel="preload" href="fonts/anuphan-400-700-thai.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/ibm-plex-sans-thai-looped-400-thai.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets in Strict Order -->
+  <link rel="stylesheet" href="fonts/fonts.css">
+  <link rel="stylesheet" href="design/tokens.css">
+  <link rel="stylesheet" href="assets/site.css">
+
+  <script src="assets/site.js" defer></script>
+
+  <!-- Schema.org SoftwareApplication JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "KeyFlip",
+    "operatingSystem": "macOS 13+, Windows 10/11 (64-bit)",
+    "applicationCategory": "UtilitiesApplication",
+    "softwareVersion": "0.2.0",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "THB"
+    },
+    "license": "https://opensource.org/licenses/MIT",
+    "url": "https://keyflip.sparkth.io/",
+    "downloadUrl": "https://keyflip.sparkth.io/download/"
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">ข้ามไปยังเนื้อหาหลัก</a>
+
+  <!-- Section 0: Header -->
+  <header class="site-header">
+    <div class="page-container site-header-inner">
+      <a href="./" class="wordmark-link" aria-label="KeyFlip หน้าแรก">
+        <svg class="wordmark-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="1" y="1" width="22" height="22" rx="4" fill="#C9D1DD"/>
+          <rect x="1" y="1" width="22" height="20" rx="4" fill="#FFFFFF" stroke="#DDE2EA" stroke-width="1"/>
+          <text x="4" y="9" font-family="'KF Display', sans-serif" font-size="7" font-weight="600" fill="#5E6678">k</text>
+          <text x="19" y="17" text-anchor="end" font-family="'KF Display', sans-serif" font-size="10" font-weight="700" fill="#2347C6">ฟ</text>
+        </svg>
+        <span class="wordmark-text">KeyFlip</span>
+      </a>
+
+      <nav class="site-nav" aria-label="เมนูหลัก">
+        <a href="#video" class="nav-link nav-link-desktop">ดูคลิป</a>
+        <a href="#privacy" class="nav-link nav-link-desktop">ความเป็นส่วนตัว</a>
+        <a href="#faq" class="nav-link nav-link-desktop">คำถาม</a>
+        <a href="download/" class="btn btn-secondary btn-sm nav-download">ดาวน์โหลด</a>
+        <a href="https://github.com/ongkub/keyflip" class="nav-link nav-link-desktop" target="_blank" rel="noopener noreferrer" aria-label="โค้ดบน GitHub (เปิดในแท็บใหม่)">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <!-- Section 1: Hero -->
+    <section class="site-section hero-section">
+      <div class="page-container">
+        <div class="hero-grid">
+          <!-- Left Column -->
+          <div class="hero-content">
+            <h1><span class="phrase">พิมพ์ผิดภาษา</span> <span class="phrase">ไม่ต้องลบพิมพ์ใหม่</span></h1>
+            <p class="hero-lead">ลืมเปลี่ยนภาษาแล้วพิมพ์ออกมาเป็น <kbd>l;ylfu</kbd> ใช่ไหม KeyFlip แก้เป็น “สวัสดี” ให้ทันที แล้วสลับแป้นพิมพ์ให้เอง ใช้ได้ทั้งไทยเป็นอังกฤษ และอังกฤษเป็นไทย</p>
+            <div class="hero-actions">
+              <a href="download/" class="btn btn-primary">ดาวน์โหลดฟรี</a>
+              <a href="#video" class="hero-link-video">ดูคลิปการใช้งาน</a>
+            </div>
+            <p class="hero-meta">ใช้ได้บน macOS 13&nbsp;ขึ้นไป และ Windows 64&nbsp;บิต รุ่นทดลอง 0.2.0 ฟรีและเปิดโค้ด</p>
+          </div>
+
+          <!-- Right Column: Keycap Flip & Demo Input -->
+          <div class="hero-demo-stage">
+            <p class="visually-hidden">ตัวอย่าง: ปุ่ม l;ylfu บนแป้นอังกฤษ ตรงกับคำว่า สวัสดี บนแป้นไทย</p>
+            <div class="keycap-row" id="hero-keycap-row" aria-hidden="true">
+              <!-- Key 1: l -> ส -->
+              <div class="keycap" data-key="0">
+                <div class="keycap-inner">
+                  <div class="keycap-face keycap-face-front">
+                    <span class="legend-latin legend-lead-ink">l</span>
+                    <span class="legend-thai legend-sub">ส</span>
+                  </div>
+                  <div class="keycap-face keycap-face-back">
+                    <span class="legend-latin legend-sub">l</span>
+                    <span class="legend-thai legend-lead-primary">ส</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Key 2: ; -> ว -->
+              <div class="keycap" data-key="1">
+                <div class="keycap-inner">
+                  <div class="keycap-face keycap-face-front">
+                    <span class="legend-latin legend-lead-ink">;</span>
+                    <span class="legend-thai legend-sub">ว</span>
+                  </div>
+                  <div class="keycap-face keycap-face-back">
+                    <span class="legend-latin legend-sub">;</span>
+                    <span class="legend-thai legend-lead-primary">ว</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Key 3: y -> ◌ั -->
+              <div class="keycap" data-key="2">
+                <div class="keycap-inner">
+                  <div class="keycap-face keycap-face-front">
+                    <span class="legend-latin legend-lead-ink">y</span>
+                    <span class="legend-thai legend-sub">&#x25CC;&#x0E31;</span>
+                  </div>
+                  <div class="keycap-face keycap-face-back">
+                    <span class="legend-latin legend-sub">y</span>
+                    <span class="legend-thai legend-lead-primary">&#x25CC;&#x0E31;</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Key 4: l -> ส -->
+              <div class="keycap" data-key="3">
+                <div class="keycap-inner">
+                  <div class="keycap-face keycap-face-front">
+                    <span class="legend-latin legend-lead-ink">l</span>
+                    <span class="legend-thai legend-sub">ส</span>
+                  </div>
+                  <div class="keycap-face keycap-face-back">
+                    <span class="legend-latin legend-sub">l</span>
+                    <span class="legend-thai legend-lead-primary">ส</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Key 5: f -> ด -->
+              <div class="keycap" data-key="4">
+                <div class="keycap-inner">
+                  <div class="keycap-face keycap-face-front">
+                    <span class="legend-latin legend-lead-ink">f</span>
+                    <span class="legend-thai legend-sub">ด</span>
+                  </div>
+                  <div class="keycap-face keycap-face-back">
+                    <span class="legend-latin legend-sub">f</span>
+                    <span class="legend-thai legend-lead-primary">ด</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Key 6: u -> ◌ี -->
+              <div class="keycap" data-key="5">
+                <div class="keycap-inner">
+                  <div class="keycap-face keycap-face-front">
+                    <span class="legend-latin legend-lead-ink">u</span>
+                    <span class="legend-thai legend-sub">&#x25CC;&#x0E35;</span>
+                  </div>
+                  <div class="keycap-face keycap-face-back">
+                    <span class="legend-latin legend-sub">u</span>
+                    <span class="legend-thai legend-lead-primary">&#x25CC;&#x0E35;</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-result-line" aria-live="polite">
+              <span class="hero-result-caption">ถ้าแป้นผิด คำนี้จะกลายเป็น</span>
+              <span class="composed-word" id="hero-composed-word">สวัสดี</span>
+            </div>
+
+            <div class="demo-input-group">
+              <label for="demo-text-input" class="demo-input-label">ลองพิมพ์ดู</label>
+              <input type="text" id="demo-text-input" class="demo-text-input" placeholder="ลองพิมพ์ l;ylfu หรือ ทำำะรืเ" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="text" aria-describedby="demo-note">
+              <p id="demo-note" class="demo-input-note">ตัวอย่างนี้แปลงทุกตัวอักษรตามแป้น ส่วนแอปจริงจะแก้เฉพาะคำที่พิมพ์ผิดแป้นเท่านั้น</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Video -->
+    <section class="site-section" id="video">
+      <div class="page-container">
+        <h2>ดูตอนใช้งานจริง</h2>
+        <p>คลิปนี้อัดจากหน้าจอจริงบน Mac ใน Chrome, Notes, Word และ Claude พิมพ์ภาษาไทยตอนแป้นยังเป็นอังกฤษ และพิมพ์ภาษาอังกฤษตอนแป้นเป็นไทย KeyFlip แก้ให้ทั้งสองแบบทันที โดยไม่ต้องกดเปลี่ยนภาษาเอง</p>
+        <div class="video-frame">
+          <video controls playsinline preload="metadata" width="1280" height="720" poster="assets/demo/keyflip-demo-poster.jpg">
+            <source src="assets/demo/keyflip-demo.mp4" type="video/mp4">
+            <track kind="captions" srclang="th" label="ไทย" src="assets/demo/keyflip-demo.th.vtt" default>
+          </video>
+        </div>
+        <div class="video-captions-grid">
+          <div class="video-caption-item">
+            <span class="mini-key-pair" aria-hidden="true"><kbd class="mini-key">i</kbd><kbd class="mini-key">ร</kbd></span>
+            <span>ลืมเปลี่ยนเป็นไทย: พิมพ์ <kbd>ihkodkca</kbd> ได้ ร้านกาแฟ</span>
+          </div>
+          <div class="video-caption-item">
+            <span class="mini-key-pair" aria-hidden="true"><kbd class="mini-key">ไ</kbd><kbd class="mini-key">w</kbd></span>
+            <span>ลืมเปลี่ยนเป็นอังกฤษ: พิมพ์ <kbd>ไรดร</kbd> ได้ wifi</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: How it knows -->
+    <section class="site-section">
+      <div class="page-container">
+        <h2>มันรู้ได้ยังไงว่าพิมพ์ผิด</h2>
+        <p>ระหว่างที่คุณพิมพ์ KeyFlip จะอ่านคำล่าสุดพร้อมกันสองแบบ คือแบบที่คุณกดลงไปจริง และแบบที่เป็นปุ่มเดียวกันในอีกภาษาหนึ่ง</p>
+        <p>ถ้าการอ่านอีกภาษาหนึ่งเป็นคำที่มีความหมายชัดเจน ในขณะที่สิ่งที่คุณเพิ่งพิมพ์ไม่ใช่คำ KeyFlip จะสลับแป้นพิมพ์แล้วแทนที่ด้วยคำที่ถูกต้องให้ทันที แต่ถ้าไม่แน่ใจ แอปจะปล่อยคำนั้นไว้ตามเดิมโดยไม่แตะต้อง</p>
+        <p>การตรวจจับและตัดสินใจทั้งหมดเกิดขึ้นในเครื่องของคุณทันที ไม่มีการส่งสิ่งที่คุณพิมพ์ออกไปประมวลผลที่อื่น</p>
+        <div class="compare-box" role="table" aria-label="เปรียบเทียบการอ่านคำสองภาษา">
+          <div class="compare-row" role="row">
+            <span class="compare-col-typed"><kbd>l;ylfu</kbd> อ่านเป็นภาษาอังกฤษ</span>
+            <span class="compare-arrow" aria-hidden="true">→</span>
+            <span class="compare-status text-slate">ไม่ใช่คำ</span>
+          </div>
+          <div class="compare-row" role="row">
+            <span class="compare-col-typed"><kbd>l;ylfu</kbd> ปุ่มเดียวกันอ่านเป็นภาษาไทย</span>
+            <span class="compare-arrow" aria-hidden="true">→</span>
+            <span class="compare-status"><mark>สวัสดี</mark></span>
+            <span class="compare-arrow" aria-hidden="true">→</span>
+            <span class="compare-status text-primary">แก้ให้</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: If it gets it wrong -->
+    <section class="site-section">
+      <div class="page-container">
+        <h2>ถ้ามันแก้ผิด</h2>
+        <p>กด <kbd class="key-chip">Backspace</kbd> ทันทีหลังมันแปลง หรือแตะ <kbd class="key-chip">Shift</kbd> สองครั้ง คำจะกลับเป็นแบบที่คุณพิมพ์ ถ้าย้อนคำเดิมเป็นครั้งที่สอง KeyFlip จะจำไว้และไม่แปลงคำนั้นอีก ล้างรายการนี้ได้จากเมนูของแอป</p>
+      </div>
+    </section>
+
+    <!-- Section 5: Privacy -->
+    <section class="site-section" id="privacy">
+      <div class="page-container">
+        <h2>KeyFlip เห็นอะไร และส่งอะไรออกไป</h2>
+        <div class="privacy-panel">
+          <div class="privacy-group">
+            <h3>ระหว่างพิมพ์ KeyFlip เห็น</h3>
+            <ul>
+              <li>ปุ่มที่คุณกด เพื่อดูว่าคำล่าสุดพิมพ์ผิดแป้นหรือไม่</li>
+              <li>ชื่อแอปที่เปิดอยู่ เพื่อหยุดทำงานในแอปอย่าง Terminal, VS Code และตัวจัดการรหัสผ่าน</li>
+              <li>ไม่ทำงานในช่องรหัสผ่าน</li>
+            </ul>
+          </div>
+          <div class="privacy-group">
+            <h3>เก็บไว้ในเครื่องของคุณเท่านั้น</h3>
+            <ul>
+              <li>คำที่ถูกแปลงหรือที่คุณย้อนกลับ พร้อมชื่อแอปที่พิมพ์</li>
+              <li>จำนวนคำที่พิมพ์และที่แก้ในแต่ละวัน</li>
+              <li>ข้อความอื่นที่พิมพ์ไม่ถูกเก็บ</li>
+            </ul>
+          </div>
+          <div class="privacy-group">
+            <h3>ส่งออกไปนอกเครื่อง</h3>
+            <ul>
+              <li>ไม่มี ยกเว้นตอนที่คุณเปิด “แจ้งปัญหา…” แล้วกดส่งเอง ซึ่งส่งเฉพาะสิ่งที่เห็นในหน้าต่างรายงาน</li>
+            </ul>
+          </div>
+        </div>
+        <p class="privacy-source-links">ตรวจดูได้เองในโค้ด:
+          <a href="https://github.com/ongkub/keyflip/blob/main/app/Sources/KeyTap.swift" target="_blank" rel="noopener noreferrer">ตัวอ่านแป้นบน Mac</a>,
+          <a href="https://github.com/ongkub/keyflip/blob/main/win/src/hook.rs" target="_blank" rel="noopener noreferrer">ตัวอ่านแป้นบน Windows</a>,
+          <a href="https://github.com/ongkub/keyflip/blob/main/server/feedback_server.py" target="_blank" rel="noopener noreferrer">ตัวรับรายงานปัญหา</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- Section 6: Before the first open -->
+    <section class="site-section">
+      <div class="page-container">
+        <h2>ก่อนเปิดครั้งแรก</h2>
+        <p>รุ่นทดลองนี้ยังไม่ได้ลงทะเบียนกับ Apple และ Microsoft เครื่องจึงเตือนตอนเปิดครั้งแรก เป็นเรื่องปกติ หน้าดาวน์โหลดมีวิธีผ่านทีละขั้น และต้องเปิดแป้นพิมพ์ทั้งไทย (เกษมณี) และอังกฤษไว้ในเครื่อง</p>
+        <p><a href="download/" class="btn btn-primary">ไปหน้าดาวน์โหลด</a></p>
+      </div>
+    </section>
+
+    <!-- Section 7: FAQ -->
+    <section class="site-section" id="faq">
+      <div class="page-container">
+        <h2>คำถามที่พบบ่อย</h2>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>KeyFlip อ่านทุกอย่างที่ฉันพิมพ์หรือเปล่า</span>
+              <span class="faq-indicator" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-answer">
+              <p>ไม่อ่านทุกอย่าง KeyFlip เฝ้าดูการกดปุ่มเพื่อตัดสินใจเฉพาะคำล่าสุดที่คุณกำลังพิมพ์เท่านั้น เมื่อแปลงคำหรือเมื่อคุณกดย้อนคำ ข้อมูลคำเหล่านั้นจะถูกเก็บไว้เฉพาะในเครื่องของคุณเพื่อการเรียนรู้ จะไม่มีการส่งข้อความใด&nbsp;ๆ ออกนอกเครื่องเว้นแต่คุณจะกดส่งรายงานปัญหาด้วยตัวเอง และโค้ดทั้งหมดเปิดเผยให้ตรวจสอบได้</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>ทำไมเครื่องเตือนตอนเปิด</span>
+              <span class="faq-indicator" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-answer">
+              <p>เนื่องจากเป็นรุ่นทดลอง (Beta) ที่ยังไม่ได้ลงทะเบียนใบรับรองนักพัฒนากับ Apple และ Microsoft ทั้งสองระบบจึงขึ้นข้อความเตือนความปลอดภัยตามปกติ คุณสามารถดูขั้นตอนการอนุญาตเปิดใช้งานทีละขั้นอย่างละเอียดได้ในหน้าดาวน์โหลด</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>ใช้กับแป้นแบบไหนได้บ้าง</span>
+              <span class="faq-indicator" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-answer">
+              <p>ปัจจุบันรองรับแป้นพิมพ์ภาษาไทยแบบเกษมณี (Kedmanee) คู่กับภาษาอังกฤษแบบมาตรฐาน (US / ABC) สำหรับแป้นพิมพ์ปัตตะโชติ (Pattachote) ยังไม่รองรับในรุ่นนี้</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>ใช้ในแอปไหนได้บ้าง</span>
+              <span class="faq-indicator" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-answer">
+              <p>ใช้งานได้ในเกือบทุกแอปที่คุณพิมพ์ข้อความ เช่น เว็บบราวเซอร์, LINE, Microsoft Word, โปรแกรมอีเมล และแอปแช็ตทั่วไป โดย KeyFlip จะหยุดทำงานโดยอัตโนมัติในช่องกรอกรหัสผ่าน แอป Terminal ตัวแก้ไขโค้ด และโปรแกรมจัดการรหัสผ่าน</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>ฟรีจริงไหม</span>
+              <span class="faq-indicator" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-answer">
+              <p>ฟรีอย่างสมบูรณ์ ไม่มีค่าใช้จ่ายและไม่มีโฆษณา ตัวแอปเป็นโครงการโอเพนซอร์สภายใต้สัญญาอนุญาต MIT</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>ปิดชั่วคราวได้ไหม</span>
+              <span class="faq-indicator" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-answer">
+              <p>ปิดชั่วคราวได้ตลอดเวลา บน Mac คลิกไอคอนบนแถบเมนูด้านบนแล้วเลือก “แก้ภาษาอัตโนมัติ” เพื่อเปิด/ปิด ส่วนบน Windows ให้คลิกขวาที่ไอคอนในถาดระบบ (System Tray)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>เจอปัญหาจะแจ้งยังไง</span>
+              <span class="faq-indicator" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-answer">
+              <p>คุณสามารถเปิดเมนูของแอปแล้วเลือก “แจ้งปัญหา…” โดยคุณจะมองเห็นข้อมูลทั้งหมดที่จะส่งก่อนกดส่งเสมอ หรือสามารถเปิด Issue ในคลังโค้ดบน GitHub ได้โดยตรง</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Section 8: Footer -->
+  <footer class="site-footer">
+    <div class="page-container site-footer-inner">
+      <p class="footer-meta">KeyFlip 0.2.0 รุ่นทดลอง</p>
+      <nav class="footer-links" aria-label="ลิงก์ส่วนท้าย">
+        <a href="download/">ดาวน์โหลด</a>
+        <a href="https://github.com/ongkub/keyflip" target="_blank" rel="noopener noreferrer">โค้ดบน GitHub</a>
+        <a href="https://github.com/ongkub/keyflip/releases/tag/v0.2.0-beta" target="_blank" rel="noopener noreferrer">บันทึกรุ่น 0.2.0</a>
+        <a href="https://github.com/ongkub/keyflip/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">สัญญาอนุญาต MIT</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

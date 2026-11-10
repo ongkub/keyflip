@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <rect x="1" y="1" width="30" height="30" rx="5" fill="#C9D1DD"/>
+  <rect x="1" y="1" width="30" height="27" rx="5" fill="#FFFFFF" stroke="#DDE2EA" stroke-width="1"/>
+  <text x="6" y="11" font-family="'KF Display', 'Anuphan', system-ui, sans-serif" font-size="8" font-weight="600" fill="#5E6678">A</text>
+  <text x="26" y="24" text-anchor="end" font-family="'KF Display', 'Anuphan', system-ui, sans-serif" font-size="13" font-weight="700" fill="#2347C6">ก</text>
+</svg>

@@ -17,7 +17,12 @@ jobs:
         run: cargo test --release
 
   mac-swift-core:
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Apple Silicon and Intel: the download ships one universal app for both.
+        os: [macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

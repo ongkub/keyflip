@@ -34,7 +34,7 @@ fi
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict><key>CFBundleIdentifier</key><string>local.keyflip.auto</string><key>CFBundleName</key><string>KeyFlip Auto</string><key>CFBundleExecutable</key><string>KeyFlipAuto</string><key>CFBundlePackageType</key><string>APPL</string><key>LSUIElement</key><true/><key>LSMinimumSystemVersion</key><string>13.0</string><key>CFBundleShortVersionString</key><string>0.2.0</string><key>CFBundleVersion</key><string>0.2.0</string></dict></plist>
+<plist version="1.0"><dict><key>CFBundleIdentifier</key><string>local.keyflip.auto</string><key>CFBundleName</key><string>KeyFlip Auto</string><key>CFBundleExecutable</key><string>KeyFlipAuto</string><key>CFBundlePackageType</key><string>APPL</string><key>LSUIElement</key><true/><key>LSMinimumSystemVersion</key><string>13.0</string><key>CFBundleShortVersionString</key><string>0.2.1</string><key>CFBundleVersion</key><string>0.2.1</string></dict></plist>
 PLIST
 for lang in th en; do
   # Ship the open-data model (models/open, see detector/train_open.py); KEYFLIP_MODELS overrides.

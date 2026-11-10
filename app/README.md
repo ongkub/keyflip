@@ -9,7 +9,7 @@
 ปิดจากเมนูแถบสถานะ > `ออก` ถอนการติดตั้งโดยปิดแอปแล้วลบ `~/Applications/KeyFlipAuto.app`; ลบโฟลเดอร์ข้อมูลเดียวกันหากต้องการล้างข้อมูลด้วย
 
 ## สร้างไฟล์ zip สำหรับเผยแพร่
-รัน `bash app/package.sh` เพื่อสร้าง `dist/KeyFlip-macOS-beta-0.2.0.zip` สำหรับ macOS ทั้ง Apple Silicon และ Intel
+รัน `bash app/package.sh` เพื่อสร้าง `dist/KeyFlip-macOS-beta-<version>.zip` สำหรับ macOS ทั้ง Apple Silicon และ Intel
 
 ## ทดสอบพิมพ์จริง (สำหรับนักพัฒนา)
 `app/tools/kftest.swift` กดปุ่มจริง (keycode) ลง TextEdit แล้วอ่านข้อความกลับมาเทียบ 7 เคส: แปลงไทย/อังกฤษ,

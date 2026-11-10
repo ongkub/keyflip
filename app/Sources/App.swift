@@ -119,7 +119,7 @@ private final class ReportWindowController: NSObject, NSTextViewDelegate, NSText
     private func report() throws -> [String: Any] {
         let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withFullDate]
         let stats = try? Data(contentsOf: store.root.appendingPathComponent("stats.json")); let events = try? Data(contentsOf: store.root.appendingPathComponent("events.jsonl"))
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.2.0"
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.2.1"
         return try ReportBuilder.build(message: message.string, contact: contact.stringValue, includeRecentWords: attach.state == .on, version: version, osVersion: ProcessInfo.processInfo.operatingSystemVersionString, model: model, enabled: store.settings["enabled"] as? Bool ?? true, statsData: stats, eventsData: events, day: formatter.string(from: Date()))
     }
     private func refresh() {

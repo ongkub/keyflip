@@ -1,0 +1,352 @@
+/* Download page specific styles. Inherits baseline, tokens, and components from site.css */
+
+.download-intro-section {
+  margin-block: var(--space-xl) var(--space-lg);
+}
+
+.download-lead {
+  font: var(--type-body);
+  font-size: 1.25rem;
+  color: var(--color-ink);
+  margin: 0;
+  max-width: var(--text-measure);
+}
+
+/* Mobile Visitor Notice Panel */
+.mobile-notice-section {
+  margin-block-end: var(--space-lg);
+}
+
+.mobile-notice-panel {
+  background-color: var(--color-keycap);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-panel);
+  padding: var(--space-lg);
+  max-width: var(--text-measure);
+}
+
+.mobile-notice-panel h2 {
+  font: var(--type-title);
+  margin-block: 0 var(--space-xs);
+}
+
+.mobile-notice-panel p {
+  font: var(--type-body);
+  color: var(--color-ink);
+  margin-block: 0 var(--space-md);
+}
+
+.mobile-notice-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* Download Panels Grid */
+.download-panels-section {
+  margin-block-end: var(--space-section);
+}
+
+.download-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  max-width: var(--page-max);
+}
+
+@media (max-width: 768px) {
+  .download-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.download-panel {
+  background-color: var(--color-keycap);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-panel);
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 640px) {
+  .download-panel {
+    padding: var(--space-lg);
+  }
+}
+
+.download-panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-block-end: var(--space-xs);
+}
+
+.download-panel-header h2 {
+  margin: 0;
+  font: var(--type-headline);
+}
+
+.download-os-match {
+  font: var(--type-small);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.download-req {
+  font: var(--type-body);
+  color: var(--color-ink);
+  margin-block: 0 var(--space-xs);
+}
+
+.download-file-info {
+  font: var(--type-small);
+  color: var(--color-slate);
+  margin-block: 0 var(--space-lg);
+}
+
+.download-action {
+  margin-block-end: var(--space-md);
+}
+
+.download-action .btn {
+  width: 100%;
+}
+
+/* Checksum Details */
+.checksum-details {
+  margin-top: var(--space-md);
+  border-top: 1px solid var(--color-rule);
+  padding-top: var(--space-sm);
+}
+
+.checksum-summary {
+  font: var(--type-small);
+  color: var(--color-slate);
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 32px;
+}
+
+.checksum-summary:hover {
+  color: var(--color-primary);
+}
+
+.checksum-body {
+  margin-top: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.checksum-label {
+  font: var(--type-small);
+  color: var(--color-slate);
+  margin: 0;
+}
+
+.checksum-code,
+.checksum-cmd {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  background-color: var(--color-neutral);
+  color: var(--color-ink);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-rule);
+  display: block;
+}
+
+.checksum-code {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/* Before You Open: Tabs & Steps */
+.before-open-lead {
+  font: var(--type-body);
+  margin-block-end: var(--space-lg);
+}
+
+.os-tabs-container {
+  margin-block-start: var(--space-md);
+}
+
+/* Without JS, both panels show one after another */
+html:not(.has-js) .os-tablist {
+  display: none;
+}
+
+html:not(.has-js) .os-tabpanel {
+  display: block;
+  margin-block-end: var(--space-xl);
+}
+
+html:not(.has-js) .os-tabpanel-title {
+  display: block;
+  font: var(--type-title);
+  margin-block: var(--space-lg) var(--space-sm);
+}
+
+/* With JS active, show tablist and hide redundant heading */
+.has-js .os-tablist {
+  display: inline-flex;
+  gap: var(--space-xs);
+  background-color: var(--color-neutral);
+  padding: 4px;
+  border: 1px solid var(--color-rule);
+  border-radius: calc(var(--radius-key) + 2px);
+  margin-block-end: var(--space-lg);
+}
+
+.has-js .os-tabpanel-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.os-tab {
+  font: var(--type-body-strong);
+  padding: 8px 24px;
+  min-height: 44px;
+  border-radius: var(--radius-key);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-slate);
+  cursor: pointer;
+  font-synthesis: none;
+  transition: color 80ms ease, background-color 80ms ease;
+  box-sizing: border-box;
+}
+
+.os-tab:hover {
+  color: var(--color-ink);
+}
+
+.os-tab[aria-selected="true"] {
+  background-color: var(--color-keycap);
+  color: var(--color-primary);
+  border-color: var(--color-rule);
+  border-bottom: var(--key-edge) solid var(--color-keycap-edge);
+}
+
+.os-tabpanel[hidden] {
+  display: none !important;
+}
+
+.os-tabpanel:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-control);
+}
+
+/* Numbered Steps */
+.step-list {
+  margin: 0;
+  padding-left: var(--space-lg);
+  max-width: var(--text-measure);
+}
+
+.step-item {
+  font: var(--type-body);
+  margin-block-end: var(--space-md);
+  padding-left: var(--space-xs);
+}
+
+.step-item::marker {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* Step Screenshot Reserved Slot */
+.step-shot {
+  margin: var(--space-md) 0 var(--space-xs) 0;
+  aspect-ratio: 16 / 10;
+  max-width: 520px;
+  width: 100%;
+  background-color: var(--color-neutral);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.step-shot-placeholder {
+  font: var(--type-small);
+  color: var(--color-slate);
+  text-align: center;
+  padding: var(--space-md);
+}
+
+/* Keyboard Layouts Section */
+.keyboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  margin-block-start: var(--space-md);
+  max-width: var(--page-max);
+}
+
+@media (max-width: 768px) {
+  .keyboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.keyboard-item {
+  background-color: var(--color-keycap);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-panel);
+  padding: var(--space-lg);
+}
+
+.keyboard-item h3 {
+  font: var(--type-title);
+  margin-block: 0 var(--space-xs);
+}
+
+.keyboard-item p {
+  margin: 0;
+  font: var(--type-body);
+}
+
+/* After Installing Section */
+.usage-list {
+  margin: var(--space-md) 0 0 0;
+  padding-left: 20px;
+  max-width: var(--text-measure);
+}
+
+.usage-item {
+  font: var(--type-body);
+  margin-block-end: var(--space-md);
+}
+
+.usage-sublist {
+  margin-top: var(--space-xs);
+  padding-left: 20px;
+}
+
+.usage-sublist li {
+  margin-block: var(--space-xs);
+}
+
+/* Help Section */
+.help-section p {
+  font: var(--type-body);
+}

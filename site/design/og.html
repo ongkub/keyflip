@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>KeyFlip share image source</title>
+<!-- Source for assets/og.png (1200x630). Render with headless Chrome; see site/README.md. -->
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: var(--color-neutral); color: var(--color-ink); font-synthesis: none; }
+  .wrap { box-sizing: border-box; height: 100%; padding: 72px 80px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 48px; }
+  .mark { font: 700 34px/1.3 var(--font-display); display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
+  .mark i { width: 40px; height: 40px; border-radius: 9px; background: #fff; border: 1px solid var(--color-rule); border-bottom: 3px solid var(--color-keycap-edge); box-sizing: border-box; position: relative; }
+  .mark i::after { content: 'ก'; position: absolute; right: 6px; bottom: 1px; font: 600 20px/1.3 var(--font-display); color: var(--color-primary); }
+  h1 { font: 700 76px/1.25 var(--font-display); margin: 0 0 28px; }
+  h1 span { display: block; }
+  p { font: 400 30px/1.6 var(--font-text); color: var(--color-slate); margin: 0; }
+  .keys { display: grid; grid-template-columns: repeat(3, 112px); gap: 14px; }
+  .key { width: 112px; height: 112px; box-sizing: border-box; background: #fff; border: 1px solid var(--color-rule); border-bottom: 5px solid var(--color-keycap-edge); border-radius: 16px; position: relative; }
+  .key .la { position: absolute; left: 14px; top: 8px; font: 500 24px/1.3 var(--font-display); color: var(--color-slate); }
+  .key .th { position: absolute; right: 14px; bottom: 6px; font: 600 50px/1.35 var(--font-display); color: var(--color-primary); }
+  .word { grid-column: 1 / -1; justify-self: start; margin-top: 10px; background: var(--color-highlight); font: 600 40px/1.45 var(--font-display); padding: 2px 18px; border-radius: 8px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <div class="mark"><i></i>KeyFlip</div>
+      <h1><span>พิมพ์ผิดภาษา</span><span>ไม่ต้องลบพิมพ์ใหม่</span></h1>
+      <p>แก้ไทย อังกฤษให้อัตโนมัติ<br>ฟรีบน Mac และ Windows</p>
+    </div>
+    <div class="keys">
+      <div class="key"><span class="la">l</span><span class="th">ส</span></div>
+      <div class="key"><span class="la">;</span><span class="th">ว</span></div>
+      <div class="key"><span class="la">y</span><span class="th">◌ั</span></div>
+      <div class="key"><span class="la">l</span><span class="th">ส</span></div>
+      <div class="key"><span class="la">f</span><span class="th">ด</span></div>
+      <div class="key"><span class="la">u</span><span class="th">◌ี</span></div>
+      <div class="word">สวัสดี</div>
+    </div>
+  </div>
+</body>
+</html>

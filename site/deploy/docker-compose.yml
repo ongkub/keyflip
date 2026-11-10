@@ -1,0 +1,30 @@
+name: keyflip-site
+services:
+  site:
+    image: keyflip-site:${SITE_TAG}
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=16m"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 64m
+    cpus: 0.5
+    pids_limit: 64
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+    networks: [proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: ${TRAEFIK_NETWORK}
+      traefik.http.routers.keyflip-site.rule: "Host(`${KEYFLIP_HOST:-keyflip.sparkth.io}`) && !PathPrefix(`/v1`) && !PathPrefix(`/admin`) && !Path(`/healthz`)"
+      traefik.http.routers.keyflip-site.priority: "100"
+      traefik.http.routers.keyflip-site.entrypoints: websecure
+      traefik.http.routers.keyflip-site.tls: "true"
+      traefik.http.routers.keyflip-site.tls.certresolver: myresolver
+      traefik.http.services.keyflip-site.loadbalancer.server.port: "8080"
+
+networks:
+  proxy:
+    external: true
+    name: ${TRAEFIK_NETWORK}

@@ -1,0 +1,31 @@
+# Thai typography test strings for KeyFlip
+# Plain UTF-8 text; lines starting with # are group headings/comments.
+
+# Stacked marks
+ปั้น ปี่ ฟื้น ญี่ปุ่น ฎีกา ฐาน ฤๅษี น้ำ กำ เกียรติ ก็ ปู่ป้าน้าอา พี่น้อง ป่า ฝั่ง ฝ้าย ป่ำ ฟ้า ผู้หญิง ขี้ผึ้ง เสื้อผ้า กิ้งก่า เนื้อที่ ขี้เกียจ
+
+# Below-base vowels and descenders
+ฎุ ฏู ญู ฐุ ปุ่ม สู่ ครุฑ
+
+# Leading vowels and SARA AM
+เก แก โก ใจ ไป เกือก แก้ว โต๊ะ ใหญ่ ไม้ ทำ น้ำ คำ
+
+# Repetition and abbreviation marks
+เร็วๆ นี้ ฯลฯ กรุงเทพฯ
+
+# Thai digits and mixed
+๑๒๓ ราคา 0 บาท ขนาด 10 MB macOS 13 ขึ้นไป
+
+# Long no-space paragraph (~120 Thai characters)
+KeyFlip ตรวจจับคำที่คุณลืมสลับแป้นพิมพ์แล้วแก้เป็นภาษาไทยให้อัตโนมัติในพริบตาโดยไม่ต้องกดลบคำเดิมเพื่อพิมพ์ใหม่แม้แต่ตัวอักษรเดียว
+
+# Demo pairs from the product (wrong layout Latin -> Thai)
+l;ylfu -> สวัสดี
+vpkdwxdbo-hk; -> อยากไปกินข้าว
+
+# Headline candidates
+พิมพ์ผิดภาษา ไม่ต้องลบพิมพ์ใหม่
+ลืมเปลี่ยนภาษา ก็ไม่ต้องพิมพ์ใหม่
+
+# Mixed sentence
+เปิด KeyFlip บน macOS แล้วอนุญาต Accessibility ครั้งเดียว

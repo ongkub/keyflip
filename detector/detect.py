@@ -41,6 +41,21 @@ def thai_orthography_ok(s):
     return True
 
 
+# Same list as FILE_EXTENSIONS in core/src/detect.rs (keep them in sync).
+FILE_EXTENSIONS = ("pdf", "jpg", "jpeg", "png", "gif", "heic", "webp", "svg", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+                   "csv", "txt", "zip", "rar", "mp3", "mp4", "mov", "psd", "html", "json", "key", "pages")
+
+
+def is_file_extension(run):
+    """".pdf" or a >=4-char prefix of a known extension; shorter ".o" stays convertible (ใน, ให้, ใคร start with that key)."""
+    if not run.startswith("."):
+        return False
+    rest = run[1:].lower()
+    if not rest or not all(c.isascii() and c.isalnum() for c in rest):
+        return False
+    return any(ext == rest or (len(run) >= 4 and ext.startswith(rest)) for ext in FILE_EXTENSIONS)
+
+
 class Detector:
     _MODEL_CACHE = {}
 
@@ -82,6 +97,8 @@ class Detector:
                 source = "en"
         if source is None or source not in self.lms or ("th" not in self.lms or "en" not in self.lms):
             return "keep", 0.0
+        if source == "en" and is_file_extension(s):
+            return "keep", 0.0  # ".pdf" after Thai text is a file name, not Thai typed on ABC
         max_check_len = self.config.get("max_check_len")
         if not complete and max_check_len is not None and len(s) > max_check_len:
             return "keep", 0.0

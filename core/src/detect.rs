@@ -170,6 +170,9 @@ impl Detector {
         } else {
             return decision;
         };
+        if source == Lang::En && is_file_extension(run) {
+            return decision; // ".pdf" after Thai text is a file name, not Thai typed on ABC
+        }
         let len = run.chars().count();
         if !complete && self.config.max_check_len.is_some_and(|max| len > max) {
             return decision;
@@ -267,5 +270,42 @@ mod tests {
         assert!(python_digit('๑'));
         assert!(!python_digit('Ⅻ'));
         assert!(!python_digit('½'));
+    }
+}
+
+/// Same list as `FILE_EXTENSIONS` in detector/detect.py (keep them in sync).
+/// Common file extensions typed right after Thai text (e.g. "ไฟล์.pdf" splits into "ไฟล์" + ".pdf").
+/// A run is protected when it is ".ext" or a ≥4-character prefix of one; shorter prefixes such as ".o"
+/// stay convertible because Thai words starting with ใ (ใน, ให้, ใคร) begin with the same key.
+pub const FILE_EXTENSIONS: &[&str] = &[
+    "pdf", "jpg", "jpeg", "png", "gif", "heic", "webp", "svg", "doc", "docx", "xls", "xlsx", "ppt",
+    "pptx", "csv", "txt", "zip", "rar", "mp3", "mp4", "mov", "psd", "html", "json", "key", "pages",
+];
+
+pub fn is_file_extension(run: &str) -> bool {
+    let Some(rest) = run.strip_prefix('.') else {
+        return false;
+    };
+    let lower = rest.to_ascii_lowercase();
+    if lower.is_empty() || !lower.chars().all(|c| c.is_ascii_alphanumeric()) {
+        return false;
+    }
+    FILE_EXTENSIONS
+        .iter()
+        .any(|ext| *ext == lower || (run.chars().count() >= 4 && ext.starts_with(lower.as_str())))
+}
+
+#[cfg(test)]
+mod file_extension_tests {
+    use super::is_file_extension;
+    #[test]
+    fn extensions_are_protected_but_thai_starting_with_sara_ai_mai_malai_is_not() {
+        for run in [".pdf", ".PDF", ".docx", ".doc", ".jpe", ".mp4"] {
+            assert!(is_file_extension(run), "{run}");
+        }
+        // ใน=".o", ให้=".s'h", ใจ=".0", ใคร=".8i", ใหม่=".s,j": must stay convertible
+        for run in [".o", ".s'h", ".0", ".8i", ".s,j", ".p", "pdf", ".pdfx"] {
+            assert!(!is_file_extension(run), "{run}");
+        }
     }
 }

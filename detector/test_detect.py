@@ -34,4 +34,15 @@ class DetectorTests(unittest.TestCase):
         self.assertEqual(default.decide("w,j", "th", complete=True)[0], "convert")
 
 
+class FileExtensionTests(unittest.TestCase):
+    def test_extensions_protected_thai_sara_ai_not(self):
+        from detect import is_file_extension
+        for run in (".pdf", ".PDF", ".docx", ".doc", ".jpe", ".mp4"):
+            self.assertTrue(is_file_extension(run), run)
+        for run in (".o", ".s'h", ".0", ".8i", ".s,j", ".p", "pdf", ".pdfx"):
+            self.assertFalse(is_file_extension(run), run)
+
+
 if __name__ == "__main__": unittest.main()
+
+

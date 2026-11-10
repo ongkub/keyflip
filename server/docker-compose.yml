@@ -1,5 +1,5 @@
 # Runs next to an existing Traefik (Docker provider, exposedbydefault=false, entrypoint "websecure",
-# ACME resolver "myresolver"). deploy-docker.sh writes TRAEFIK_NETWORK and KEYFLIP_TRUSTED_PROXIES into proxy.env.
+# ACME resolver "myresolver"). deploy-docker.sh writes TRAEFIK_NETWORK and KEYFLIP_TRUSTED_PROXY_HOSTS into proxy.env.
 name: keyflip-feedback
 services:
   feedback:
@@ -10,7 +10,11 @@ services:
     volumes:
       - data:/data
     read_only: true
-    tmpfs: [/tmp]
+    tmpfs: ["/tmp:size=16m"]
+    pids_limit: 64
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
     mem_limit: 128m

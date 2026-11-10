@@ -11,9 +11,11 @@ import ipaddress
 import json
 import os
 import secrets
+import socket
 import sqlite3
 import sys
 import threading
+import time
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
@@ -39,23 +41,46 @@ def parse_networks(text: str) -> list:
     return nets
 
 
-# Proxies whose X-Forwarded-For we believe: loopback (Caddy on the host) by default; in Docker behind
-# Traefik set KEYFLIP_TRUSTED_PROXIES to the proxy network, e.g. 172.16.0.0/12. Traefik replaces any
-# X-Forwarded-For sent by clients themselves (forwardedHeaders.insecure is false by default).
+# Proxies whose X-Forwarded-For we believe. Default: loopback (Caddy on the same host). In Docker behind
+# Traefik, KEYFLIP_TRUSTED_PROXY_HOSTS names the Traefik container; it is resolved through Docker's DNS
+# (cached for 60 s) so only that container is trusted, even if its IP changes after a restart.
 TRUSTED_PROXIES = parse_networks(os.environ.get("KEYFLIP_TRUSTED_PROXIES", "127.0.0.1/32,::1/128"))
+TRUSTED_PROXY_HOSTS = [h.strip() for h in os.environ.get("KEYFLIP_TRUSTED_PROXY_HOSTS", "").split(",") if h.strip()]
+_proxy_cache = {"at": 0.0, "nets": []}
+_proxy_lock = threading.Lock()
+
+
+def trusted_networks() -> list:
+    """Static networks plus the current addresses of the named proxy containers."""
+    if not TRUSTED_PROXY_HOSTS:
+        return TRUSTED_PROXIES
+    with _proxy_lock:
+        if time.monotonic() - _proxy_cache["at"] > 60:
+            nets = []
+            for host in TRUSTED_PROXY_HOSTS:
+                try:
+                    for info in socket.getaddrinfo(host, None):
+                        nets.append(ipaddress.ip_network(info[4][0]))
+                except OSError:
+                    pass
+            _proxy_cache.update(at=time.monotonic(), nets=nets)
+        return TRUSTED_PROXIES + _proxy_cache["nets"]
 
 
 def client_ip(peer_ip: str, forwarded_for: str | None, trusted=None) -> str:
-    """Trust XFF's first hop only when the TCP peer is a configured proxy."""
-    nets = TRUSTED_PROXIES if trusted is None else trusted
+    """When the TCP peer is a trusted proxy, use the hop it appended: the LAST X-Forwarded-For entry,
+    and only if it is a valid IP address. Anything else falls back to the peer address."""
+    nets = trusted_networks() if trusted is None else trusted
     try:
         peer = ipaddress.ip_address(peer_ip)
     except ValueError:
         return peer_ip
     if forwarded_for and any(peer in net for net in nets):
-        first = forwarded_for.split(",", 1)[0].strip()
-        if first:
-            return first
+        last = forwarded_for.rsplit(",", 1)[-1].strip()
+        try:
+            return str(ipaddress.ip_address(last))
+        except ValueError:
+            return peer_ip
     return peer_ip
 
 

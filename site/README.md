@@ -24,3 +24,10 @@ Recorded on a real Mac with `app/tools/kfdemo.swift` driving each app with physi
 `screencapture -v` records only the typing area; clips are cropped, labelled and joined with ffmpeg, captions are
 `assets/demo/keyflip-demo.th.vtt`. Re-record when the app's behaviour changes visibly; never record windows that
 show private content (crop to the typing area and check every clip before committing).
+
+## Deploy (keyflip.sparkth.io)
+Run as root on the VPS (Hostinger Web console), pinned to a pushed commit:
+`REF=<40-char sha>; curl -fsSL https://raw.githubusercontent.com/ongkub/keyflip/$REF/site/deploy/deploy-site.sh | KEYFLIP_REF=$REF bash 2>&1 | tee /root/keyflip-site-deploy.log`
+It builds `keyflip-site:<sha12>` (nginx, non-root, read-only), routes the host except `/v1`, `/admin`, `/healthz`
+(those stay with the report receiver), runs 9 checks through Traefik and rolls back to the previous healthy tag on
+any failure (or removes the site on a failed first deploy). Files live in `/opt/keyflip-site`.

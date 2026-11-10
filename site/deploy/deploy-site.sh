@@ -79,13 +79,18 @@ if ! "${COMPOSE[@]}" up -d; then
   exit 1
 fi
 
+# Traefik only routes to a healthy container, so until then the receiver answers the site's paths.
+wait_healthy() {
+  HEALTH=
+  for _ in $(seq 1 30); do
+    HEALTH="$(docker inspect --format '{{.State.Health.Status}}' keyflip-site-site-1 2>/dev/null || true)"
+    [[ "$HEALTH" == healthy ]] && return 0
+    sleep 2
+  done
+  return 1
+}
 echo "Waiting up to 60 seconds for the site container to report healthy..."
-HEALTH=
-for _ in $(seq 1 30); do
-  HEALTH="$(docker inspect --format '{{.State.Health.Status}}' keyflip-site-site-1 2>/dev/null || true)"
-  [[ "$HEALTH" == healthy ]] && break
-  sleep 2
-done
+wait_healthy || true
 
 PASS_COUNT=0
 FAIL_COUNT=0
@@ -129,7 +134,7 @@ rollback() {
   if [[ -n "$PREV" ]]; then
     write_env "$PREV"
     docker compose -p keyflip-site --env-file "$DIR/site.env" -f "$DIR/docker-compose.yml" up -d || true
-    sleep 2
+    wait_healthy || true; sleep 3   # then give Traefik a moment to add the router back
     local health_code home_code
     health_code="$(request "$BASE/healthz" 2>/dev/null || true)"
     home_code="$(request "$BASE/" 2>/dev/null || true)"

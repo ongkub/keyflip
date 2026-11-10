@@ -9,6 +9,6 @@ RUN chmod -R a=rX /usr/share/nginx/html
 
 ENTRYPOINT []
 CMD ["nginx", "-g", "daemon off;"]
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s CMD wget -q -O /dev/null http://127.0.0.1:8080/__health || exit 1
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s CMD wget -q -O /dev/null http://127.0.0.1:8080/__health || exit 1
 USER 101
 EXPOSE 8080

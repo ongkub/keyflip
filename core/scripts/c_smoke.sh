@@ -7,7 +7,7 @@ trap 'rm -rf "$scratch"' EXIT
 mkdir -p "$scratch/models"
 cp "$root/core/tests/fixtures/tiny.kfm" "$scratch/models/th.kfm"
 cp "$root/core/tests/fixtures/tiny.kfm" "$scratch/models/en.kfm"
-cargo build --manifest-path "$root/Cargo.toml" --offline --release --target-dir "$root/target"
+cargo build --manifest-path "$root/Cargo.toml" --release --target-dir "$root/target"
 case "$(uname -s)" in
     Darwin) libs=(-framework Security -framework CoreFoundation -liconv -lresolv) ;;
     *) libs=(-ldl -lpthread -lm) ;;

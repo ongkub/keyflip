@@ -2,8 +2,8 @@
 set -euo pipefail
 export PATH="/opt/homebrew/opt/rustup/bin:$PATH"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cargo build --offline --release -p keyflip-core --manifest-path "$ROOT/Cargo.toml"
-NATIVE_INFO="$(cargo rustc --offline -p keyflip-core --release --manifest-path "$ROOT/Cargo.toml" -- --print native-static-libs 2>&1)"
+cargo build --release -p keyflip-core --manifest-path "$ROOT/Cargo.toml"
+NATIVE_INFO="$(cargo rustc -p keyflip-core --release --manifest-path "$ROOT/Cargo.toml" -- --print native-static-libs 2>&1)"
 NATIVE_LINE="$(printf '%s\n' "$NATIVE_INFO" | sed -n 's/.*native-static-libs: //p' | tail -1)"
 NATIVE_FLAGS=()
 if [ -n "$NATIVE_LINE" ]; then read -r -a NATIVE_FLAGS <<< "$NATIVE_LINE"; fi

@@ -10,7 +10,7 @@
 สถิติการใช้งานวันนี้ ภาษา ช่องทางติดต่อที่เลือกให้ไว้ และคำที่แปลงล่าสุดเมื่อ
 ผู้ใช้เลือกแนบเท่านั้น ไม่บันทึกเนื้อหา request ลง log. IP ดิบไม่ถูกเก็บ
 ระบบสร้าง SHA-256 จาก salt และ IP เพื่อใช้จำกัดการส่ง 5 ครั้งต่อชั่วโมงและ
-20 ครั้งต่อวันต่อ IP. User-Agent ถูกเก็บไม่เกิน 200 ตัวอักษร
+20 ครั้งต่อวันต่อ IP และรวมทั้งระบบไม่เกิน 1,000 ฉบับต่อวัน ไม่เก็บ User-Agent หรือข้อมูลอื่นนอก schema
 
 ผู้ดูแลเปิด `/admin` เพื่อดู 200 รายงานล่าสุด หรือ `/admin/reports.json` เพื่อรับ
 ข้อมูล JSON. ทั้งสองเส้นทางต้องยืนยัน HTTP Basic ด้วยชื่อผู้ใช้ `admin` และ
@@ -23,7 +23,8 @@
 ที่ Traefik มองเห็นจาก label เอง ไม่ต้องแก้ config ของ Traefik หรือ stack อื่น
 
 1. เปิด Hostinger → VPS → **Web console** (ล็อกอินเป็น root)
-2. รัน: `curl -fsSL https://raw.githubusercontent.com/ongkub/keyflip/main/server/deploy-docker.sh | bash`
+2. รันโดยระบุ commit ที่จะติดตั้ง (40 ตัวอักษร จาก GitHub) เพื่อไม่ให้ไฟล์เปลี่ยนระหว่างติดตั้ง:
+   `REF=<commit-sha>; curl -fsSL https://raw.githubusercontent.com/ongkub/keyflip/$REF/server/deploy-docker.sh | KEYFLIP_REF=$REF bash`
 3. สคริปต์ดึงไฟล์ไปไว้ที่ `/opt/keyflip-feedback`, สร้างรหัสผ่าน admin แบบสุ่มใน `/opt/keyflip-feedback/.env`
    (อ่านด้วย `grep ADMIN /opt/keyflip-feedback/.env`), หาเครือข่ายของ Traefik เอง, build และรัน container
    (ผู้ใช้ไม่มีสิทธิ์พิเศษ, root filesystem อ่านอย่างเดียว, จำกัด RAM 128 MB) แล้วรอจนสถานะ healthy

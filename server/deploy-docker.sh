@@ -7,7 +7,8 @@
 set -euo pipefail
 
 DIR=/opt/keyflip-feedback
-REF=${KEYFLIP_REF:-main}
+REF=${KEYFLIP_REF:-}
+[[ "$REF" =~ ^[0-9a-f]{40}$ ]] || { echo "deploy: set KEYFLIP_REF to a full 40-character commit SHA (no unpinned deploys)" >&2; exit 1; }
 RAW=${KEYFLIP_RAW:-https://raw.githubusercontent.com/ongkub/keyflip/$REF/server}
 PROXY_CONTAINER=${KEYFLIP_PROXY_CONTAINER:-spark-virtual-reverse-proxy-1}
 
@@ -23,7 +24,7 @@ docker inspect "$PROXY_CONTAINER" >/dev/null 2>&1 || fail "Traefik container '$P
 NETS="$(docker inspect "$PROXY_CONTAINER" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{"\n"}}{{end}}' | sed '/^$/d')"
 if [[ -n "${KEYFLIP_TRAEFIK_NETWORK:-}" ]]; then
   NET="$KEYFLIP_TRAEFIK_NETWORK"
-  grep -qx "$NET" <<<"$NETS" || fail "Traefik is not on network '$NET' (it is on: $(echo $NETS))"
+  grep -qxF "$NET" <<<"$NETS" || fail "Traefik is not on network '$NET' (it is on: $(echo $NETS))"
 elif [[ -n "$NETS" && "$(wc -l <<<"$NETS")" -eq 1 ]]; then
   NET="$NETS"
 else
@@ -31,15 +32,18 @@ else
 fi
 
 install -d -m 0755 "$DIR"
-# Keep the previous version so a failed update can be put back.
-if [[ -f "$DIR/feedback_server.py" ]]; then
+# Download into a temporary folder first: a failed download changes nothing.
+STAGE="$(mktemp -d)"
+trap 'rm -rf "$STAGE"' EXIT
+for f in Dockerfile docker-compose.yml feedback_server.py; do
+  curl -fsSL "$RAW/$f" -o "$STAGE/$f" || fail "download of $f failed; nothing was changed"
+done
+# Keep the running version only if it is healthy, so a failed update never overwrites the good copy.
+if [[ "$(docker inspect --format '{{.State.Health.Status}}' keyflip-feedback-feedback-1 2>/dev/null || true)" == "healthy" ]]; then
   rm -rf "$DIR/previous"; mkdir -p "$DIR/previous"
   cp -p "$DIR/Dockerfile" "$DIR/docker-compose.yml" "$DIR/feedback_server.py" "$DIR/previous/"
 fi
-for f in Dockerfile docker-compose.yml feedback_server.py; do
-  curl -fsSL "$RAW/$f" -o "$DIR/$f.new"
-  mv "$DIR/$f.new" "$DIR/$f"
-done
+cp "$STAGE/"* "$DIR/"
 
 if [[ ! -f "$DIR/.env" ]]; then
   ( umask 077
@@ -53,8 +57,17 @@ chmod 600 "$DIR/.env"
 # Docker DNS) may set X-Forwarded-For. 127.0.0.1 stays trusted for local checks inside the container only.
 printf 'TRAEFIK_NETWORK=%s\nKEYFLIP_TRUSTED_PROXY_HOSTS=%s\nKEYFLIP_TRUSTED_PROXIES=127.0.0.1/32\n' "$NET" "$PROXY_CONTAINER" > "$DIR/proxy.env"
 
+restore() {
+  if [[ -d "$DIR/previous" ]]; then
+    cp -p "$DIR/previous/"* "$DIR/"
+    docker compose --env-file proxy.env up -d --build || true
+    fail "$1; restored the previous version (logs: cd $DIR && docker compose --env-file proxy.env logs)"
+  fi
+  fail "$1 (logs: cd $DIR && docker compose --env-file proxy.env logs)"
+}
+
 cd "$DIR"
-docker compose --env-file proxy.env up -d --build
+docker compose --env-file proxy.env up -d --build || restore "build or start failed"
 
 echo "Waiting for the container to report healthy..."
 for _ in $(seq 1 30); do
@@ -62,14 +75,7 @@ for _ in $(seq 1 30); do
   [[ "$state" == "healthy" ]] && break
   sleep 2
 done
-if [[ "${state:-}" != "healthy" ]]; then
-  if [[ -d "$DIR/previous" ]]; then
-    cp -p "$DIR/previous/"* "$DIR/"
-    docker compose --env-file proxy.env up -d --build || true
-    fail "new version did not become healthy; restored the previous version (logs: docker compose --env-file proxy.env logs)"
-  fi
-  fail "container is not healthy; check: cd $DIR && docker compose --env-file proxy.env logs"
-fi
+[[ "${state:-}" == "healthy" ]] || restore "the new version did not become healthy"
 
 # Through Traefik on this machine (-k: the Let's Encrypt certificate can take a minute on first deploy).
 if curl -fsSk --resolve keyflip.sparkth.io:443:127.0.0.1 https://keyflip.sparkth.io/healthz >/dev/null; then

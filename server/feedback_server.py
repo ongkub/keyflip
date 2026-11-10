@@ -60,10 +60,13 @@ def trusted_networks() -> list:
             for host in TRUSTED_PROXY_HOSTS:
                 try:
                     for info in socket.getaddrinfo(host, None):
-                        nets.append(ipaddress.ip_network(info[4][0]))
-                except OSError:
+                        nets.append(ipaddress.ip_network(str(info[4][0]).split("%", 1)[0]))
+                except (OSError, ValueError):
                     pass
-            _proxy_cache.update(at=time.monotonic(), nets=nets)
+            # A failed lookup keeps the last known addresses instead of distrusting the proxy for a minute.
+            if nets or not _proxy_cache["nets"]:
+                _proxy_cache["nets"] = nets
+            _proxy_cache["at"] = time.monotonic()
         return TRUSTED_PROXIES + _proxy_cache["nets"]
 
 

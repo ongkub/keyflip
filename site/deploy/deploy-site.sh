@@ -36,7 +36,7 @@ STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 curl -fsSL "$TARBALL" -o "$STAGE/source.tar.gz" || fail "source download failed; nothing was changed"
 mkdir "$STAGE/extract"
-tar -xzf "$STAGE/source.tar.gz" --no-same-owner -C "$STAGE/extract" || fail "could not extract the source tarball"
+tar -xzf "$STAGE/source.tar.gz" --no-same-owner --no-same-permissions -C "$STAGE/extract" || fail "could not extract the source tarball"
 TOP_COUNT="$(find "$STAGE/extract" -mindepth 1 -maxdepth 1 -type d -print | wc -l | tr -d ' ')"
 [[ "$TOP_COUNT" == 1 ]] || fail "expected exactly one top-level directory in source archive"
 TOP="$(find "$STAGE/extract" -mindepth 1 -maxdepth 1 -type d -print -quit)"
@@ -53,32 +53,36 @@ cp -R "$SRC/assets/." "$CTX/html/assets/"
 cp -R "$SRC/fonts/." "$CTX/html/fonts/"
 cp "$SRC/design/tokens.css" "$CTX/html/design/tokens.css"
 
+
+# Roll back only to what is really running: a healthy container whose image still exists.
 PREV=
-if [[ -f "$DIR/site.env" && "$(docker inspect --format '{{.State.Health.Status}}' keyflip-site-site-1 2>/dev/null || true)" == healthy ]]; then
-  PREV="$(sed -n 's/^SITE_TAG=//p' "$DIR/site.env" | head -n 1)"
+if [[ "$(docker inspect --format '{{.State.Health.Status}}' keyflip-site-site-1 2>/dev/null || true)" == healthy ]]; then
+  img="$(docker inspect --format '{{.Config.Image}}' keyflip-site-site-1 2>/dev/null || true)"
+  [[ "$img" == keyflip-site:* ]] && PREV="${img#keyflip-site:}"
+  if [[ -n "$PREV" ]] && ! docker image inspect "keyflip-site:$PREV" >/dev/null 2>&1; then PREV=; fi
 fi
+if [[ -n "$PREV" ]]; then echo "Rollback target: keyflip-site:$PREV (running and healthy)"
+else echo "No healthy site is running: if this deploy fails, the site is removed and the receiver alone serves $HOST"; fi
+
 docker build -t "keyflip-site:$TAG" "$CTX" || fail "image build failed; running deployment was not changed"
 install -d "$DIR"
+if [[ -f "$DIR/docker-compose.yml" ]]; then cp "$DIR/docker-compose.yml" "$STAGE/compose.prev"; fi
 cp "$SRC/deploy/docker-compose.yml" "$DIR/docker-compose.yml"
 write_env() {
   local tag="$1" tmp="$DIR/.site.env.$$"
   (umask 077; printf 'SITE_TAG=%s\nTRAEFIK_NETWORK=%s\nKEYFLIP_HOST=%s\n' "$tag" "$NET" "$HOST" > "$tmp")
   mv "$tmp" "$DIR/site.env"
 }
-write_env "$TAG"
 COMPOSE=(docker compose -p keyflip-site --env-file "$DIR/site.env" -f "$DIR/docker-compose.yml")
-if ! "${COMPOSE[@]}" up -d; then
-  if [[ -n "$PREV" ]]; then
-    write_env "$PREV"
-    docker compose -p keyflip-site --env-file "$DIR/site.env" -f "$DIR/docker-compose.yml" up -d || true
-    echo "deploy-site: compose start failed; rolled back to $PREV" >&2
-  else
-    docker compose -p keyflip-site --env-file "$DIR/site.env" -f "$DIR/docker-compose.yml" down || true
-    echo "deploy-site: compose start failed; first deploy removed so the receiver alone serves the host" >&2
-  fi
-  exit 1
-fi
 
+CURL_ARGS=(-sS --max-time 15 --resolve "$HOST:$HTTPS_PORT:127.0.0.1")   # no -f: 401/404 bodies and headers are checked too
+EXTRA_ARGS=()
+if [[ -n "${CURL_EXTRA// /}" ]]; then read -r -a EXTRA_ARGS <<<"$CURL_EXTRA"; fi
+CURL_ARGS+=(${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"})
+BASE="https://$HOST:$HTTPS_PORT"
+request() { curl "${CURL_ARGS[@]}" -D "$STAGE/headers" -o "$STAGE/body" -w '%{http_code}' "$@"; }
+header_has() { tr -d '\r' < "$STAGE/headers" | grep -Eiq "^$1:[[:space:]]*$2"; }
+content_type_has() { header_has 'content-type' "$1"; }
 # Traefik only routes to a healthy container, so until then the receiver answers the site's paths.
 wait_healthy() {
   HEALTH=
@@ -89,6 +93,33 @@ wait_healthy() {
   done
   return 1
 }
+# Every failure after this point ends here: back to the previous healthy version, or no site at all (the receiver
+# then answers every path on the host again). Never leaves an unverified version routed.
+restore() {
+  local reason="$1"
+  trap - INT TERM
+  if [[ -n "$PREV" ]]; then
+    if [[ -f "$STAGE/compose.prev" ]]; then cp "$STAGE/compose.prev" "$DIR/docker-compose.yml"; fi
+    write_env "$PREV"
+    if "${COMPOSE[@]}" up -d && wait_healthy; then
+      sleep 3   # give Traefik a moment to add the router back
+      local health_code home_code
+      health_code="$(request "$BASE/healthz" 2>/dev/null || true)"
+      home_code="$(request "$BASE/" 2>/dev/null || true)"
+      echo "deploy-site: $reason; rolled back to $PREV (checks: /healthz=$health_code /=$home_code)" >&2
+      exit 1
+    fi
+    echo "deploy-site: the previous version $PREV did not come back healthy either" >&2
+  fi
+  "${COMPOSE[@]}" down || true
+  rm -f "$DIR/site.env"
+  echo "deploy-site: $reason; the site was removed, so the receiver alone serves $HOST (re-run with a good KEYFLIP_REF)" >&2
+  exit 1
+}
+
+write_env "$TAG"
+trap 'restore "interrupted"' INT TERM
+"${COMPOSE[@]}" up -d || restore "compose start failed"
 echo "Waiting up to 60 seconds for the site container to report healthy..."
 wait_healthy || true
 
@@ -99,12 +130,6 @@ check() {
   if [[ "$ok" == 1 ]]; then printf 'PASS: %s\n' "$name"; PASS_COUNT=$((PASS_COUNT + 1));
   else printf 'FAIL: %s\n' "$name"; FAIL_COUNT=$((FAIL_COUNT + 1)); fi
 }
-CURL_ARGS=(-sS --max-time 15 --resolve "$HOST:$HTTPS_PORT:127.0.0.1")   # no -f: 401/404 bodies and headers are checked too
-if [[ -n "$CURL_EXTRA" ]]; then read -r -a EXTRA_ARGS <<<"$CURL_EXTRA"; CURL_ARGS+=("${EXTRA_ARGS[@]}"); fi
-BASE="https://$HOST:$HTTPS_PORT"
-request() { curl "${CURL_ARGS[@]}" -D "$STAGE/headers" -o "$STAGE/body" -w '%{http_code}' "$@"; }
-header_has() { tr -d '\r' < "$STAGE/headers" | grep -Eiq "^$1:[[:space:]]*$2"; }
-content_type_has() { header_has 'content-type' "$1"; }
 first_ok=0
 for _ in $(seq 1 10); do
   if code="$(request "$BASE/")" && [[ "$code" == 200 ]] && content_type_has 'text/html' && grep -q 'KeyFlip' "$STAGE/body" && header_has 'content-security-policy' '.+'; then first_ok=1; break; fi
@@ -129,26 +154,10 @@ if [[ "$code" == 401 ]]; then check 'receiver GET /admin remains 401' 1; else ch
 code="$(request "$BASE/v1/reports" 2>/dev/null || true)"
 if [[ "$code" == 404 ]] && content_type_has 'application/json'; then check 'receiver GET /v1/reports remains JSON' 1; else check 'receiver GET /v1/reports remains JSON' 0; fi
 
-rollback() {
-  local reason="$1"
-  if [[ -n "$PREV" ]]; then
-    write_env "$PREV"
-    docker compose -p keyflip-site --env-file "$DIR/site.env" -f "$DIR/docker-compose.yml" up -d || true
-    wait_healthy || true; sleep 3   # then give Traefik a moment to add the router back
-    local health_code home_code
-    health_code="$(request "$BASE/healthz" 2>/dev/null || true)"
-    home_code="$(request "$BASE/" 2>/dev/null || true)"
-    echo "deploy-site: $reason; rolled back to $PREV (rollback checks: /healthz=$health_code /=$home_code)" >&2
-  else
-    docker compose -p keyflip-site --env-file "$DIR/site.env" -f "$DIR/docker-compose.yml" down || true
-    echo "deploy-site: $reason; first deploy removed so the receiver alone serves the host" >&2
-  fi
-  exit 1
-}
-
-[[ "$HEALTH" == healthy ]] || rollback "site container did not become healthy"
-[[ "$FAIL_COUNT" -eq 0 ]] || rollback "$FAIL_COUNT public checks failed"
+[[ "$HEALTH" == healthy ]] || restore "site container did not become healthy"
+[[ "$FAIL_COUNT" -eq 0 ]] || restore "$FAIL_COUNT public checks failed"
+trap - INT TERM
 
 echo "Deployed tag: $TAG"
-echo "Public checks: curl https://$HOST:$HTTPS_PORT/ ; curl -I https://$HOST:$HTTPS_PORT/download/ ; curl https://$HOST:$HTTPS_PORT/healthz ; curl -i https://$HOST:$HTTPS_PORT/admin ; curl -i https://$HOST:$HTTPS_PORT/v1/reports"
-echo "Rollback: set SITE_TAG=<prev> in $DIR/site.env, then docker compose -p keyflip-site --env-file $DIR/site.env -f $DIR/docker-compose.yml up -d"
+echo "Public checks: curl https://$HOST/ ; curl -I https://$HOST/download ; curl https://$HOST/healthz ; curl -i https://$HOST/admin ; curl -i https://$HOST/v1/reports"
+echo "Roll back by hand: set SITE_TAG=<older tag> in $DIR/site.env, then docker compose -p keyflip-site --env-file $DIR/site.env -f $DIR/docker-compose.yml up -d"

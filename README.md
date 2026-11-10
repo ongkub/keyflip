@@ -3,7 +3,13 @@
 แก้คำที่พิมพ์ผิดภาษาให้อัตโนมัติระหว่างพิมพ์ (แป้นไทยเกษมณี ⇄ อังกฤษ) — พิมพ์ `vpkdwxdbo-hk;` แล้วได้ "อยากไปกินข้าว"
 พร้อมสลับแป้นให้เอง · Fixes words typed with the wrong keyboard layout (Thai Kedmanee ⇄ English) while you type.
 
-**Status: early beta, not released yet.** macOS prototype works; Windows is in progress.
+**Status: public beta 0.2.0** for macOS 13+ (Apple Silicon and Intel) and Windows 64-bit.
+
+## ดาวน์โหลด · Download
+[หน้าดาวน์โหลด (Releases)](https://github.com/ongkub/keyflip/releases) — เลือก `KeyFlip-macOS-beta-…zip` หรือ
+`KeyFlip-Windows-beta-…zip` ในแต่ละ zip มีคู่มือติดตั้งภาษาไทย `README-TH.txt`
+รุ่นทดลองยังไม่ได้ลงทะเบียนกับ Apple/Microsoft จึงมีคำเตือนตอนเปิดครั้งแรก (วิธีผ่านอยู่ในคู่มือ)
+เจอปัญหาแจ้งผ่านเมนู "แจ้งปัญหา…" ในแอป · Problems: use "แจ้งปัญหา…" (Report a problem) in the app menu.
 
 ## Privacy
 - Everything runs on your computer. Nothing you type is sent anywhere.
@@ -17,7 +23,9 @@ Shift twice.
 
 ## Repository
 - `core/` — shared Rust core (scorer, models, per-keystroke tracker, C ABI)
-- `app/` — macOS menu-bar app (Swift)
+- `app/` — macOS menu-bar app (Swift); `app/package.sh` makes the universal download zip
+- `win/` — Windows tray app (Rust)
+- `server/` — problem-report receiver (Python, Docker)
 - `detector/` — Python research code: training, evaluation, model export
 - `convert.js`, `build.py` — the original "select text and press a shortcut" macOS Quick Action
 

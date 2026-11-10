@@ -1,0 +1,45 @@
+# ตัวรับรายงานปัญหา KeyFlip
+
+บริการนี้รับรายงานจากแอป KeyFlip ผ่าน HTTPS ที่
+`https://keyflip.sparkth.io/v1/reports` และเก็บข้อมูลใน SQLite ที่
+`/var/lib/keyflip-feedback/reports.db` โดยใช้ Python standard library เท่านั้น
+
+## ข้อมูลและความเป็นส่วนตัว
+
+ระบบเก็บข้อความที่ผู้ใช้ส่ง รุ่นแอปและระบบปฏิบัติการ แพลตฟอร์ม โมเดล สถานะ
+สถิติการใช้งานวันนี้ ภาษา ช่องทางติดต่อที่เลือกให้ไว้ และคำที่แปลงล่าสุดเมื่อ
+ผู้ใช้เลือกแนบเท่านั้น ไม่บันทึกเนื้อหา request ลง log. IP ดิบไม่ถูกเก็บ
+ระบบสร้าง SHA-256 จาก salt และ IP เพื่อใช้จำกัดการส่ง 5 ครั้งต่อชั่วโมงและ
+20 ครั้งต่อวันต่อ IP. User-Agent ถูกเก็บไม่เกิน 200 ตัวอักษร
+
+ผู้ดูแลเปิด `/admin` เพื่อดู 200 รายงานล่าสุด หรือ `/admin/reports.json` เพื่อรับ
+ข้อมูล JSON. ทั้งสองเส้นทางต้องยืนยัน HTTP Basic ด้วยชื่อผู้ใช้ `admin` และ
+รหัสผ่านใน `/etc/keyflip-feedback.env`; หน้า HTML แสดงผลแบบ escape และส่ง
+`Cache-Control: no-store`.
+
+## ติดตั้งครั้งแรก
+
+1. คัดลอกโฟลเดอร์ `server/` ไปยังเครื่อง Linux ที่มี systemd, Caddy, Python 3
+   และ curl. เตรียม Caddyfile ที่ `/etc/caddy/Caddyfile` และสิทธิ์ root.
+2. จากเครื่องเจ้าของ รัน `ssh root@HOST 'bash -s' < server/deploy.sh` โดยเปลี่ยน
+   `HOST` เป็นเครื่องปลายทาง. สคริปต์ติดตั้งโปรแกรมและ unit, สร้าง environment
+   file พร้อมรหัสผ่านสุ่มเฉพาะเมื่อไฟล์ยังไม่มี, ตรวจ Caddy และ reload บริการ.
+3. อ่านรหัสผ่านผู้ดูแลจาก `/etc/keyflip-feedback.env` ผ่าน SSH ที่ปลอดภัย
+   (สคริปต์ไม่แสดงรหัสผ่านบนหน้าจอ).
+4. ตรวจ `/healthz` และเปิด `https://keyflip.sparkth.io/admin` ในเบราว์เซอร์
+   โดยใช้ user `admin`.
+
+## อัปเดต
+
+คัดลอกไฟล์ `feedback_server.py`, unit และ `Caddyfile.snippet` เวอร์ชันใหม่ไปยัง
+โฟลเดอร์ `server/` บนเครื่อง แล้วรันสคริปต์ติดตั้งอีกครั้ง. Environment file
+เดิมจะถูกรักษาไว้. สคริปต์ไม่สำรอง Caddyfile ดังนั้นตรวจ diff ก่อนใช้งานจริง.
+
+## ลบการติดตั้ง
+
+ในฐานะ root ให้รัน `systemctl disable --now keyflip-feedback.service`, ลบ
+`/etc/systemd/system/keyflip-feedback.service` แล้ว `systemctl daemon-reload`.
+นำบล็อก `keyflip.sparkth.io` ที่เพิ่มใน Caddyfile ออก ตรวจด้วย
+`caddy validate --config /etc/caddy/Caddyfile` แล้ว reload Caddy. เมื่อต้องการ
+ลบข้อมูลถาวร ให้ลบ `/var/lib/keyflip-feedback/` และ `/etc/keyflip-feedback.env`
+ด้วยตนเองหลังสำรองข้อมูลที่ต้องเก็บแล้ว.

@@ -238,8 +238,9 @@ except the OS logo.
 
 ## Components
 
-- **Keycap.** 64px square (48px on mobile), white top, Keycap Edge bottom. Latin legend top-left in Slate (15px),
-  Thai legend bottom-right in Legend Blue (28px). A combining Thai mark shown alone on a key is drawn on a dotted
+- **Keycap.** 64px square (48px on mobile), white top, Keycap Edge bottom. Like a real Thai keycap it carries both
+  legends: Latin top-left in Slate (15px), Thai bottom-right in Legend Blue (28px). Before the flip the Latin legend
+  is the strong one; after the flip the Thai legend is (the other legend stays, quieter). A combining Thai mark shown alone on a key is drawn on a dotted
   circle (U+25CC), as on real keyboards: ◌ั ◌ี.
 - **Flip.** The hero's six keys `l ; y l f u` flip once on load to show the Thai legends spelling สวัสดี, then the
   fixed word appears on a Highlighter background. Typing in the demo input replays it for the visitor's own text.

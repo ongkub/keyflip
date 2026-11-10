@@ -16,6 +16,8 @@ Fonts: **KF Display** (Anuphan, loopless) for headings and keycaps; **KF Text** 
 
 ## 2. Line-Height and Clipping
 Thai stacks diacritics up to three levels above the baseline and descenders below (e.g. ปั้น, ญี่ปุ่น, ฎีกา, ฐุ).
+- **Measured in the bench:** KF Text (Plex Looped) lines collide at 1.1 and are tight at 1.25 — keep body at 1.7 and
+  never below 1.5 for KF Text; KF Display (Anuphan) is clean at 1.25.
 - **Minimum line-heights:** body text minimum `1.6` (KeyFlip standard is `1.7`), headings minimum `1.25`, buttons/inputs/keycaps minimum `1.3`. Never go below `1.2` anywhere.
 - **Clipping avoidance:** Elements using `overflow: hidden`, `-webkit-line-clamp`, or tight fixed heights will clip tone marks and below-base vowels. Provide extra `padding-block` or eliminate tight overflow bounds. Validate against `site/design/thai-test-strings.txt`.
 
@@ -38,12 +40,18 @@ Thai words are written continuously without spaces; browsers break lines using b
 - Keyboard keys and typed mistyped gibberish must be rendered as keycap components or within `<kbd>` elements (e.g. `<kbd>l;ylfu</kbd>`), never formatted as plain monospace inline text.
 
 ## 6. Standalone Marks
+- **Anuphan (KF Display) has no U+25CC glyph**: it renders ◌ั as empty boxes. `--font-display` therefore lists
+  'KF Text' second so the browser draws the dotted circle from IBM Plex Looped. Keep that order.
 - Combining vowels and tone marks shown alone without a consonant (in diagrams, legend keys, or explanations) must sit on U+25CC DOTTED CIRCLE: `◌ั`, `◌ี`, `◌้`, `◌่`. Never render a bare combining mark.
 
 ## 7. Thai Text Animation
 - **Never split Thai text** with `str.split('')`, `Array.from()`, `for...of`, or per code point. Doing so detaches vowels and tone marks and isolates leading vowels (เ, แ, โ, ใ, ไ).
 - Split by word using `new Intl.Segmenter('th', { granularity: 'word' })` (Baseline 2024; dictionary-based, may be imperfect) or split by line. Grapheme granularity is reserved only when a per-cluster effect is strictly needed.
-- GSAP SplitText's behaviour on Thai is unverified — test in `design/bench.html` before relying on it in production.
+- **Tested 2026-11-10 in `design/bench.html` (GSAP 3.15.1, Chromium):** SplitText `type: "chars"` splits Thai into
+  grapheme clusters, so tone marks and upper/lower vowels stay on their consonant (`ลื | ม | เ | ป | ลี่`, `น้ำ` whole);
+  leading vowels (เ แ โ ใ ไ) become their own pieces. `type: "words"` splits only at spaces, so a Thai phrase stays
+  one chunk (`ลืมเปลี่ยนภาษา`). Use `splitThaiWords()` for word effects; SplitText chars is acceptable but rarely
+  looks good on Thai.
 - Use this helper (shipped as `design/thai-split.js`, a plain script, no modules). Screen readers get the full
   text from a visually hidden copy; the animated pieces are hidden from them. Do not rely on `aria-label` on a
   `<p>`/`<div>`/`<span>`: it is not reliably announced on generic elements.

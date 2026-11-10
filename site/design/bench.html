@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeyFlip Design Bench</title>
+  <link rel="preload" href="../fonts/anuphan-400-700-thai.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/ibm-plex-sans-thai-looped-400-thai.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="bench.css">
+  <!-- GSAP 3.15.1 and SplitText CDN for bench testing only -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.1/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.1/dist/SplitText.min.js"></script>
+</head>
+<body>
+  <div class="bench-page">
+    <header class="bench-header">
+      <h1 class="bench-title">KeyFlip Design Bench</h1>
+      <p class="bench-subtitle">Internal design verification page for tokens, Thai fonts, keycap component, flip motion, and GSAP SplitText behavior.</p>
+    </header>
+
+    <!-- Section 1: Tokens -->
+    <section class="bench-section" id="section-tokens">
+      <h2>Tokens</h2>
+      
+      <div class="tokens-group">
+        <h3>Color Swatches</h3>
+        <div class="color-swatches-grid">
+          <!-- Primary -->
+          <div class="color-swatch-card">
+            <div class="color-swatch-box" style="background-color: var(--color-primary);">
+              <span class="color-swatch-sample-ink">Ink text sample</span>
+            </div>
+            <div class="color-swatch-info">
+              <div class="color-swatch-name">--color-primary</div>
+              <div class="color-swatch-hex">#2347C6</div>
+            </div>
+          </div>
+          <!-- Primary Pressed -->
+          <div class="color-swatch-card">
+            <div class="color-swatch-box" style="background-color: var(--color-primary-pressed);">
+              <span class="color-swatch-sample-ink">Ink text sample</span>
+            </div>
+            <div class="color-swatch-info">
+              <div class="color-swatch-name">--color-primary-pressed</div>
+              <div class="color-swatch-hex">#1A3699</div>
+            </div>
+          </div>
+          <!-- On Primary -->
+          <div class="color-swatch-card">
+            <div class="color-swatch-box" style="background-color: var(--color-on-primary);">
+              <span class="color-swatch-sample-ink">Ink text sample</span>
+            </div>
+            <div class="color-swatch-info">
+              <div class="color-swatch-name">--color-on-primary</div>
+              <div class="color-swatch-hex">#FFFFFF</div>
+            </div>
+          </div>
+          <!-- Ink -->
+          <div class="color-swatch-card">
+            <div class="color-swatch-box" style="background-color: var(--color-ink);">
+              <span class="color-swatch-sample-ink">Ink text sample</span>
+            </div>
+            <div class="color-swatch-info">
+              <div class="color-swatch-name">--color-ink</div>
+              <div class="color-swatch-hex">#1B2233</div>
+            </div>
+          </div>
+          <!-- Slate -->
+          <div class="color-swatch-card">
+            <div class="color-swatch-box" style="background-color: var(--color-slate);">
+              <span class="color-swatch-sample-ink">Ink text sample</span>
+            </div>
+            <div class="color-swatch-info">
+              <div class="color-swatch-name">--color-slate</div>
+              <div class="color-swatch-hex">#5E6678</div>
+            </div>
+          </div>
+          <!-- Neutral -->
+          <div class="color-swatch-card">
+            <div class="color-swatch-box" style="background-color: var(--color-neutral);">
+              <span class="color-swatch-sample-ink">Ink text sample</span>
+            </div>
+            <div class="color-swatch-info">
+              <div class="color-swatch-name">--color-neutral</div>
+              <div class="color-swatch-hex">#F7F8FA</div>
+            </div>
+          </div>
+          <!-- Keycap -->
+          <div class="color-swatch-card">
+            <div class="color-swatch-box" style="background-color: var(--color-keycap);">
+              <span class="color-swatch-sample-ink">Ink text sample</span>
+            </div>
+            <div class="color-swatch-info">
+              <div class="color-swatch-name">--color-keycap</div>
+              <div class="color-swatch-hex">#FFFFFF</div>
+            </div>
+          </div>
+          <!-- Keycap Edge -->
+          <div class="color-swatch-card">
+            <div class="color-swatch-box" style="background-color: var(--color-keycap-edge);">
+              <span class="color-swatch-sample-ink">Ink text sample</span>
+            </div>
+            <div class="color-swatch-info">
+              <div class="color-swatch-name">--color-keycap-edge</div>
+              <div class="color-swatch-hex">#C9D1DD</div>
+            </div>
+          </div>
+          <!-- Rule -->
+          <div class="color-swatch-card">
+            <div class="color-swatch-box" style="background-color: var(--color-rule);">
+              <span class="color-swatch-sample-ink">Ink text sample</span>
+            </div>
+            <div class="color-swatch-info">
+              <div class="color-swatch-name">--color-rule</div>
+              <div class="color-swatch-hex">#DDE2EA</div>
+            </div>
+          </div>
+          <!-- Highlight -->
+          <div class="color-swatch-card">
+            <div class="color-swatch-box" style="background-color: var(--color-highlight);">
+              <span class="color-swatch-sample-ink">Ink text sample</span>
+            </div>
+            <div class="color-swatch-info">
+              <div class="color-swatch-name">--color-highlight</div>
+              <div class="color-swatch-hex">#FFE066</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tokens-group">
+        <h3>Type Scale</h3>
+        <div class="type-scale-list">
+          <div class="type-scale-item">
+            <div class="type-scale-label">--type-display (700 clamp(2.25rem, 1.4rem + 3.6vw, 3.5rem) / 1.25 Anuphan)</div>
+            <p class="type-scale-sample" style="font: var(--type-display);">พิมพ์ผิดภาษา ไม่ต้องลบพิมพ์ใหม่ KeyFlip 0.2.0</p>
+          </div>
+          <div class="type-scale-item">
+            <div class="type-scale-label">--type-headline (600 clamp(1.625rem, 1.3rem + 1.4vw, 2rem) / 1.35 Anuphan)</div>
+            <p class="type-scale-sample" style="font: var(--type-headline);">พิมพ์ผิดภาษา ไม่ต้องลบพิมพ์ใหม่ KeyFlip 0.2.0</p>
+          </div>
+          <div class="type-scale-item">
+            <div class="type-scale-label">--type-title (600 1.375rem / 1.45 Anuphan)</div>
+            <p class="type-scale-sample" style="font: var(--type-title);">พิมพ์ผิดภาษา ไม่ต้องลบพิมพ์ใหม่ KeyFlip 0.2.0</p>
+          </div>
+          <div class="type-scale-item">
+            <div class="type-scale-label">--type-body (400 1.125rem / 1.7 IBM Plex Sans Thai Looped)</div>
+            <p class="type-scale-sample" style="font: var(--type-body);">พิมพ์ผิดภาษา ไม่ต้องลบพิมพ์ใหม่ KeyFlip 0.2.0</p>
+          </div>
+          <div class="type-scale-item">
+            <div class="type-scale-label">--type-body-strong (600 1.125rem / 1.7 IBM Plex Sans Thai Looped)</div>
+            <p class="type-scale-sample" style="font: var(--type-body-strong);">พิมพ์ผิดภาษา ไม่ต้องลบพิมพ์ใหม่ KeyFlip 0.2.0</p>
+          </div>
+          <div class="type-scale-item">
+            <div class="type-scale-label">--type-small (400 0.9375rem / 1.6 IBM Plex Sans Thai Looped)</div>
+            <p class="type-scale-sample" style="font: var(--type-small);">พิมพ์ผิดภาษา ไม่ต้องลบพิมพ์ใหม่ KeyFlip 0.2.0</p>
+          </div>
+          <div class="type-scale-item">
+            <div class="type-scale-label">--type-legend-thai (600 1.75rem / 1.4 Anuphan)</div>
+            <p class="type-scale-sample" style="font: var(--type-legend-thai);">พิมพ์ผิดภาษา ไม่ต้องลบพิมพ์ใหม่ KeyFlip 0.2.0</p>
+          </div>
+          <div class="type-scale-item">
+            <div class="type-scale-label">--type-legend-latin (500 0.9375rem / 1.2 Anuphan)</div>
+            <p class="type-scale-sample" style="font: var(--type-legend-latin);">พิมพ์ผิดภาษา ไม่ต้องลบพิมพ์ใหม่ KeyFlip 0.2.0</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="bench-rule">
+
+    <!-- Section 2: Keycap row + flip -->
+    <section class="bench-section" id="section-keycaps">
+      <h2>Keycap row + flip</h2>
+      <div class="keycap-stage">
+        <div class="keycap-row" id="keycap-row" aria-label="แถวปุ่มกดแสดงการพลิกจากอักษรละตินเป็นอักษรไทย">
+          <!-- Key 1: l -> ส -->
+          <div class="keycap" data-key="0">
+            <div class="keycap-inner">
+              <div class="keycap-face keycap-face-front">
+                <span class="legend-latin">l</span>
+              </div>
+              <div class="keycap-face keycap-face-back">
+                <span class="legend-thai">ส</span>
+              </div>
+            </div>
+          </div>
+          <!-- Key 2: ; -> ว -->
+          <div class="keycap" data-key="1">
+            <div class="keycap-inner">
+              <div class="keycap-face keycap-face-front">
+                <span class="legend-latin">;</span>
+              </div>
+              <div class="keycap-face keycap-face-back">
+                <span class="legend-thai">ว</span>
+              </div>
+            </div>
+          </div>
+          <!-- Key 3: y -> ◌ั -->
+          <div class="keycap" data-key="2">
+            <div class="keycap-inner">
+              <div class="keycap-face keycap-face-front">
+                <span class="legend-latin">y</span>
+              </div>
+              <div class="keycap-face keycap-face-back">
+                <span class="legend-thai">&#x25CC;&#x0E31;</span>
+              </div>
+            </div>
+          </div>
+          <!-- Key 4: l -> ส -->
+          <div class="keycap" data-key="3">
+            <div class="keycap-inner">
+              <div class="keycap-face keycap-face-front">
+                <span class="legend-latin">l</span>
+              </div>
+              <div class="keycap-face keycap-face-back">
+                <span class="legend-thai">ส</span>
+              </div>
+            </div>
+          </div>
+          <!-- Key 5: f -> ด -->
+          <div class="keycap" data-key="4">
+            <div class="keycap-inner">
+              <div class="keycap-face keycap-face-front">
+                <span class="legend-latin">f</span>
+              </div>
+              <div class="keycap-face keycap-face-back">
+                <span class="legend-thai">ด</span>
+              </div>
+            </div>
+          </div>
+          <!-- Key 6: u -> ◌ี -->
+          <div class="keycap" data-key="5">
+            <div class="keycap-inner">
+              <div class="keycap-face keycap-face-front">
+                <span class="legend-latin">u</span>
+              </div>
+              <div class="keycap-face keycap-face-back">
+                <span class="legend-thai">&#x25CC;&#x0E35;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="composed-word-container">
+          <span class="composed-word" id="hero-composed-word">สวัสดี</span>
+        </div>
+
+        <div class="keycap-actions">
+          <button type="button" class="btn btn-secondary" id="replay-flip-btn">เล่นอีกครั้ง</button>
+        </div>
+      </div>
+    </section>
+
+    <hr class="bench-rule">
+
+    <!-- Section 3: Demo input -->
+    <section class="bench-section" id="section-demo-input">
+      <h2>Demo input</h2>
+      <div class="demo-input-container">
+        <label for="demo-text-input" class="demo-input-label">ลองพิมพ์ l;ylfu</label>
+        <input
+          type="text"
+          id="demo-text-input"
+          class="demo-text-input"
+          placeholder="ลองพิมพ์ l;ylfu"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          inputmode="text"
+        />
+        <div class="demo-result-wrap">
+          <span class="demo-result-label">คำที่แปลงแล้ว:</span>
+          <div id="demo-result-output" class="demo-result-output" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="bench-rule">
+
+    <!-- Section 4: Buttons -->
+    <section class="bench-section" id="section-buttons">
+      <h2>Buttons</h2>
+      <div class="buttons-row">
+        <button type="button" class="btn btn-primary">ดาวน์โหลดสำหรับ Mac</button>
+        <button type="button" class="btn btn-secondary">ดาวน์โหลดสำหรับ Windows</button>
+      </div>
+    </section>
+
+    <hr class="bench-rule">
+
+    <!-- Section 5: Thai clipping grid -->
+    <section class="bench-section" id="section-clipping">
+      <h2>Thai clipping grid</h2>
+      <div id="clipping-grid-container" class="clipping-grid-section">
+        <p class="type-scale-sample">กำลังโหลด thai-test-strings.txt...</p>
+      </div>
+    </section>
+
+    <hr class="bench-rule">
+
+    <!-- Section 6: Segmentation -->
+    <section class="bench-section" id="section-segmentation">
+      <h2>Segmentation</h2>
+      <div class="segmentation-container">
+        <div id="segment-count-badge" class="segment-count-badge">กำลังประมวลผลการตัดคำ...</div>
+        <div id="segment-output-text" class="segment-output"></div>
+      </div>
+    </section>
+
+    <hr class="bench-rule">
+
+    <!-- Section 7: GSAP SplitText check -->
+    <section class="bench-section" id="section-splittext">
+      <h2>GSAP SplitText check</h2>
+      <div class="gsap-notice">
+        CDN allowed on the bench only; the shipped site vendors files locally
+      </div>
+      <div id="splittext-status" class="gsap-error" style="display: none;"></div>
+      <div id="splittext-results"></div>
+    </section>
+
+    <hr class="bench-rule">
+
+    <!-- Section 8: Reduced-motion switch -->
+    <section class="bench-section" id="section-reduced-motion">
+      <h2>Reduced-motion switch</h2>
+      <label class="reduce-motion-label">
+        <input type="checkbox" id="reduce-motion-checkbox">
+        <span>จำลอง reduced motion</span>
+      </label>
+    </section>
+  </div>
+
+  <script src="thai-split.js"></script>
+  <script src="bench.js"></script>
+</body>
+</html>

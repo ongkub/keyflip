@@ -14,7 +14,7 @@
   --color-highlight: #FFE066;        /* behind the word just fixed; always with ink text */
 
   /* Type families (aliases declared in ../fonts/fonts.css) */
-  --font-display: 'KF Display', 'Noto Sans Thai', 'Thonburi', system-ui, sans-serif;  /* Anuphan */
+  --font-display: 'KF Display', 'KF Text', 'Noto Sans Thai', 'Thonburi', system-ui, sans-serif;  /* Anuphan; KF Text second: Anuphan has no U+25CC dotted circle */
   --font-text: 'KF Text', 'Noto Sans Thai Looped', 'Thonburi', system-ui, sans-serif;  /* IBM Plex Sans Thai Looped */
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;                     /* checksums, commands only */
 

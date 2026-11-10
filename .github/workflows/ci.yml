@@ -32,3 +32,18 @@ jobs:
       - name: Chat import tests (no models needed)
         working-directory: detector
         run: python -m unittest -q test_import
+
+  windows-app:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test Windows app and portable logic
+        run: cargo test -p keyflip-win
+      - name: Build Windows tray app
+        run: cargo build --release -p keyflip-win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: keyflip-windows
+          path: target/release/keyflip.exe
+          if-no-files-found: error

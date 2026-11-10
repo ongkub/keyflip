@@ -19,11 +19,13 @@
 
 ## ติดตั้งครั้งแรก
 
-1. คัดลอกโฟลเดอร์ `server/` ไปยังเครื่อง Linux ที่มี systemd, Caddy, Python 3
-   และ curl. เตรียม Caddyfile ที่ `/etc/caddy/Caddyfile` และสิทธิ์ root.
-2. จากเครื่องเจ้าของ รัน `ssh root@HOST 'bash -s' < server/deploy.sh` โดยเปลี่ยน
-   `HOST` เป็นเครื่องปลายทาง. สคริปต์ติดตั้งโปรแกรมและ unit, สร้าง environment
-   file พร้อมรหัสผ่านสุ่มเฉพาะเมื่อไฟล์ยังไม่มี, ตรวจ Caddy และ reload บริการ.
+1. จากโฟลเดอร์ repo บนเครื่องเจ้าของ คัดลอกไฟล์ขึ้นเครื่อง (Linux ที่มี systemd, Caddy,
+   Python 3, curl และ Caddyfile ที่ `/etc/caddy/Caddyfile`):
+   `scp -r server root@HOST:/tmp/keyflip-feedback`
+2. รัน `ssh root@HOST 'bash /tmp/keyflip-feedback/deploy.sh'` สคริปต์ติดตั้งโปรแกรมและ unit,
+   สร้าง environment file พร้อมรหัสผ่านสุ่มเฉพาะเมื่อไฟล์ยังไม่มี, เช็กว่าพอร์ต 8787 ว่าง,
+   สำรอง Caddyfile ก่อนเพิ่มบล็อก `keyflip.sparkth.io` และคืนค่าเดิมให้อัตโนมัติถ้า
+   `caddy validate` ไม่ผ่าน (ไม่แตะเว็บอื่นบนเครื่อง) แล้วจึง reload Caddy.
 3. อ่านรหัสผ่านผู้ดูแลจาก `/etc/keyflip-feedback.env` ผ่าน SSH ที่ปลอดภัย
    (สคริปต์ไม่แสดงรหัสผ่านบนหน้าจอ).
 4. ตรวจ `/healthz` และเปิด `https://keyflip.sparkth.io/admin` ในเบราว์เซอร์

@@ -129,8 +129,7 @@ def init_db(path: str) -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             received_at TEXT NOT NULL,
             ip_hash TEXT NOT NULL,
-            report_json TEXT NOT NULL,
-            user_agent TEXT NOT NULL
+            report_json TEXT NOT NULL
         )""")
         conn.execute("CREATE INDEX IF NOT EXISTS reports_ip_time ON reports(ip_hash, received_at)")
 
@@ -259,12 +258,14 @@ class Handler(BaseHTTPRequestHandler):
             if total_day >= MAX_REPORTS_PER_DAY:
                 self.send_json(429, {"ok": False, "error": "daily capacity reached"})
                 return
-            cursor = conn.execute("INSERT INTO reports(received_at, ip_hash, report_json, user_agent) VALUES(?,?,?,?)", (received, ip_digest, json.dumps(report, ensure_ascii=False, separators=(",", ":")), self.headers.get("User-Agent", "")[:200]))
+            cursor = conn.execute("INSERT INTO reports(received_at, ip_hash, report_json) VALUES(?,?,?)", (received, ip_digest, json.dumps(report, ensure_ascii=False, separators=(",", ":"))))  # schema fields only, no user agent
             report_id = cursor.lastrowid
         self.send_json(201, {"ok": True, "id": report_id})
 
 
 def main() -> None:
+    if not IP_SALT:
+        raise SystemExit("KEYFLIP_IP_SALT is empty; refusing to store unsalted IP hashes")
     init_db(DB_PATH)
     if ":" in BIND and not BIND.startswith("["):
         host, port_text = BIND.rsplit(":", 1)

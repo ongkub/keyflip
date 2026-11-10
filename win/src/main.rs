@@ -5,11 +5,14 @@ mod exclude;
 #[cfg(windows)]
 mod hook;
 #[cfg(windows)]
+mod http;
+#[cfg(windows)]
 mod inject;
 mod input;
 mod keys;
 mod pairs;
 mod privacy;
+mod report;
 mod shift_tap;
 mod store;
 #[cfg(windows)]

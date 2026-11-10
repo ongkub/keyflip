@@ -1,0 +1,36 @@
+# Runs next to an existing Traefik (Docker provider, exposedbydefault=false, entrypoint "websecure",
+# ACME resolver "myresolver"). deploy-docker.sh writes TRAEFIK_NETWORK and KEYFLIP_TRUSTED_PROXIES into proxy.env.
+name: keyflip-feedback
+services:
+  feedback:
+    build: .
+    image: keyflip-feedback:local
+    restart: unless-stopped
+    env_file: [.env, proxy.env]
+    volumes:
+      - data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 128m
+    cpus: 0.5
+    networks: [proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: ${TRAEFIK_NETWORK}
+      traefik.http.routers.keyflip-feedback.rule: "Host(`keyflip.sparkth.io`)"
+      traefik.http.routers.keyflip-feedback.entrypoints: websecure
+      traefik.http.routers.keyflip-feedback.tls: "true"
+      traefik.http.routers.keyflip-feedback.tls.certresolver: myresolver
+      traefik.http.routers.keyflip-feedback.middlewares: keyflip-feedback-body
+      traefik.http.middlewares.keyflip-feedback-body.buffering.maxRequestBodyBytes: "16384"
+      traefik.http.services.keyflip-feedback.loadbalancer.server.port: "8787"
+
+volumes:
+  data:
+
+networks:
+  proxy:
+    external: true
+    name: ${TRAEFIK_NETWORK}

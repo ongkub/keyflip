@@ -17,7 +17,20 @@
 รหัสผ่านใน `/etc/keyflip-feedback.env`; หน้า HTML แสดงผลแบบ escape และส่ง
 `Cache-Control: no-store`.
 
-## ติดตั้งครั้งแรก
+## ติดตั้งบน VPS ที่ใช้ Traefik ใน Docker (เครื่องปัจจุบัน)
+
+พอร์ต 80/443 ของเครื่องเป็นของ Traefik (`spark-virtual-reverse-proxy-1`) ตัวรับรายงานจึงรันเป็น container
+ที่ Traefik มองเห็นจาก label เอง ไม่ต้องแก้ config ของ Traefik หรือ stack อื่น
+
+1. เปิด Hostinger → VPS → **Web console** (ล็อกอินเป็น root)
+2. รัน: `curl -fsSL https://raw.githubusercontent.com/ongkub/keyflip/main/server/deploy-docker.sh | bash`
+3. สคริปต์ดึงไฟล์ไปไว้ที่ `/opt/keyflip-feedback`, สร้างรหัสผ่าน admin แบบสุ่มใน `/opt/keyflip-feedback/.env`
+   (อ่านด้วย `grep ADMIN /opt/keyflip-feedback/.env`), หาเครือข่ายของ Traefik เอง, build และรัน container
+   (ผู้ใช้ไม่มีสิทธิ์พิเศษ, root filesystem อ่านอย่างเดียว, จำกัด RAM 128 MB) แล้วรอจนสถานะ healthy
+4. ใบรับรอง HTTPS ได้จาก Let's Encrypt อัตโนมัติภายในราว 1 นาที
+5. ถอดออก: `cd /opt/keyflip-feedback && docker compose --env-file proxy.env down` (เติม `-v` ถ้าจะลบรายงานด้วย)
+
+## ติดตั้งแบบ systemd + Caddy (เครื่องที่ไม่มี Docker)
 
 1. จากโฟลเดอร์ repo บนเครื่องเจ้าของ คัดลอกไฟล์ขึ้นเครื่อง (Linux ที่มี systemd, Caddy,
    Python 3, curl และ Caddyfile ที่ `/etc/caddy/Caddyfile`):

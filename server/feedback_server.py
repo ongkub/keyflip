@@ -7,6 +7,7 @@ import base64
 import hashlib
 import hmac
 import html
+import ipaddress
 import json
 import os
 import secrets
@@ -29,9 +30,29 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def client_ip(peer_ip: str, forwarded_for: str | None) -> str:
-    """Trust XFF's first hop only from the local Caddy proxy."""
-    if peer_ip == "127.0.0.1" and forwarded_for:
+def parse_networks(text: str) -> list:
+    nets = []
+    for part in text.split(","):
+        part = part.strip()
+        if part:
+            nets.append(ipaddress.ip_network(part, strict=False))
+    return nets
+
+
+# Proxies whose X-Forwarded-For we believe: loopback (Caddy on the host) by default; in Docker behind
+# Traefik set KEYFLIP_TRUSTED_PROXIES to the proxy network, e.g. 172.16.0.0/12. Traefik replaces any
+# X-Forwarded-For sent by clients themselves (forwardedHeaders.insecure is false by default).
+TRUSTED_PROXIES = parse_networks(os.environ.get("KEYFLIP_TRUSTED_PROXIES", "127.0.0.1/32,::1/128"))
+
+
+def client_ip(peer_ip: str, forwarded_for: str | None, trusted=None) -> str:
+    """Trust XFF's first hop only when the TCP peer is a configured proxy."""
+    nets = TRUSTED_PROXIES if trusted is None else trusted
+    try:
+        peer = ipaddress.ip_address(peer_ip)
+    except ValueError:
+        return peer_ip
+    if forwarded_for and any(peer in net for net in nets):
         first = forwarded_for.split(",", 1)[0].strip()
         if first:
             return first

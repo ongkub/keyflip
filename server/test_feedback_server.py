@@ -85,6 +85,10 @@ class FeedbackServerTests(unittest.TestCase):
     def test_forwarded_for_trust_helper(self):
         self.assertEqual(app.client_ip("192.0.2.4", "198.51.100.1, 10.0.0.2"), "192.0.2.4")
         self.assertEqual(app.client_ip("127.0.0.1", "198.51.100.1, 10.0.0.2"), "198.51.100.1")
+        docker = app.parse_networks("172.16.0.0/12")
+        self.assertEqual(app.client_ip("172.18.0.5", "198.51.100.7", docker), "198.51.100.7")  # Traefik in Docker
+        self.assertEqual(app.client_ip("203.0.113.9", "198.51.100.7", docker), "203.0.113.9")  # not a proxy
+        self.assertEqual(app.client_ip("not-an-ip", "198.51.100.7", docker), "not-an-ip")
 
     def test_admin_auth_and_html_escaping(self):
         self.assertEqual(self.post(self.valid())[0], 201)  # message contains <script>

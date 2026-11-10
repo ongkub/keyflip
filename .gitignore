@@ -2,3 +2,4 @@ detector/data/
 detector/models/
 __pycache__/
 app/build/
+target/

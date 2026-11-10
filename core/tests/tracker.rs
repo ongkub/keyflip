@@ -580,3 +580,27 @@ fn real_correct_thai_and_english_never_convert() {
             .any(|e| matches!(e, TrackerEvent::Converted { .. })));
     }
 }
+#[test]
+fn space_conversion_still_checks_the_next_word() {
+    // นัด (converted at the space) followed by "meeting" typed on the now-Thai layout.
+    let f = Fake::new(|s, complete| match (s, complete) {
+        ("oyf", true) => Decision {
+            convert: true,
+            score: 1.,
+            candidate: "นัด".into(),
+            target: Lang::Th,
+        },
+        ("ทำำะ", false) => Decision {
+            convert: true,
+            score: 1.,
+            candidate: "meet".into(),
+            target: Lang::En,
+        },
+        _ => keep(),
+    });
+    let mut t = tracker(&f);
+    type_text(&mut t, "oyf");
+    assert_eq!(t.handle(Key::Space), replace(3, "นัด ", Lang::Th));
+    let actions = type_text(&mut t, "ทำำะ");
+    assert_eq!(actions.last(), Some(&replace(3, "meet", Lang::En)));
+}

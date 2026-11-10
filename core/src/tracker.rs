@@ -307,7 +307,9 @@ impl<D: Decider> RunTracker<D> {
                             fresh: true,
                         });
                         self.run.clear();
-                        self.checked_stopped = true;
+                        // The run is empty: the next word must be checked from scratch. (This was `true`, so a
+                        // word typed right after a space-triggered conversion was never checked.)
+                        self.checked_stopped = false;
                         self.prev = Some(d.target);
                         return Action::Replace {
                             delete: n,

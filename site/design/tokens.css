@@ -1,0 +1,52 @@
+/* Design tokens for the KeyFlip site. Source of truth: ../DESIGN.md (keep the two in sync).
+   Import ../fonts/fonts.css before this file. Use these variables; do not hard-code values. */
+:root {
+  /* Colors */
+  --color-primary: #2347C6;          /* Legend Blue: Thai legend, primary action, links */
+  --color-primary-pressed: #1A3699;
+  --color-on-primary: #FFFFFF;
+  --color-ink: #1B2233;              /* all text */
+  --color-slate: #5E6678;            /* Latin legend, gibberish before the fix, captions */
+  --color-neutral: #F7F8FA;          /* page background */
+  --color-keycap: #FFFFFF;           /* key tops, buttons, panels, inputs */
+  --color-keycap-edge: #C9D1DD;      /* the visible bottom edge of a key */
+  --color-rule: #DDE2EA;             /* FAQ / table hairlines only */
+  --color-highlight: #FFE066;        /* behind the word just fixed; always with ink text */
+
+  /* Type families (aliases declared in ../fonts/fonts.css) */
+  --font-display: 'KF Display', 'Noto Sans Thai', 'Thonburi', system-ui, sans-serif;  /* Anuphan */
+  --font-text: 'KF Text', 'Noto Sans Thai Looped', 'Thonburi', system-ui, sans-serif;  /* IBM Plex Sans Thai Looped */
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;                     /* checksums, commands only */
+
+  /* Type scale: size / line-height (Thai needs the generous line-heights; never add letter-spacing) */
+  --type-display: 700 clamp(2.25rem, 1.4rem + 3.6vw, 3.5rem) / 1.25 var(--font-display);
+  --type-headline: 600 clamp(1.625rem, 1.3rem + 1.4vw, 2rem) / 1.35 var(--font-display);
+  --type-title: 600 1.375rem / 1.45 var(--font-display);
+  --type-body: 400 1.125rem / 1.7 var(--font-text);
+  --type-body-strong: 600 1.125rem / 1.7 var(--font-text);
+  --type-small: 400 0.9375rem / 1.6 var(--font-text);
+  --type-legend-thai: 600 1.75rem / 1.4 var(--font-display);
+  --type-legend-latin: 500 0.9375rem / 1.2 var(--font-display);
+
+  /* Radii by role (never one radius for everything) */
+  --radius-control: 8px;
+  --radius-key: 10px;
+  --radius-panel: 18px;
+
+  /* Spacing (4px base) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 48px;
+  --space-xxl: 72px;
+  --space-section: clamp(72px, 5rem + 3vw, 112px);
+  --text-measure: 680px;
+  --page-max: 1120px;
+  --gutter: clamp(16px, 4vw, 32px);
+
+  /* Keycap depth: a solid edge, not a shadow */
+  --key-size: clamp(48px, 9vw, 64px);
+  --key-edge: 3px;
+  --key-edge-pressed: 1px;
+}

@@ -5,13 +5,13 @@ import ApplicationServices
 final class KeyTap {
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
-    private let tracker: RunTracker
+    private let tracker: EngineBridge
     private let store: Store
     private var shiftDown: [Int64: Date] = [:]
     private var lastShift: Date?
     private var expectedSource: String?
     var enabled = true
-    init(tracker: RunTracker, store: Store) { self.tracker = tracker; self.store = store }
+    init(tracker: EngineBridge, store: Store) { self.tracker = tracker; self.store = store }
     func install() -> Bool {
         let mask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.leftMouseDown.rawValue) | (1 << CGEventType.rightMouseDown.rawValue) | (1 << CGEventType.otherMouseDown.rawValue)
         guard let t = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap, eventsOfInterest: CGEventMask(mask), callback: { proxy, type, event, refcon in

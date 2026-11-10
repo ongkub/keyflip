@@ -20,7 +20,11 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bash app/test.sh
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Swift bridge smoke test (fixture models)
+        run: bash app/test.sh
+      - name: Build macOS app (generic models optional in CI)
+        run: bash app/build.sh
 
   python-detector:
     runs-on: ubuntu-latest

@@ -10,9 +10,8 @@ import Carbon
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let store = Store()
-    private var tracker: RunTracker!
+    private var tracker: EngineBridge!
     private var tap: KeyTap!
-    private var decider: HelperDecider!
     private var status: NSStatusItem!
     private var toggle: NSMenuItem!
     private var info: NSMenuItem!
@@ -21,18 +20,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var trustedTimer: Timer?
     private var storedNever: Set<String> = []
     private var isTrusted = false
-    private var helperReady = false
+    private var engineReady = false
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        signal(SIGPIPE, SIG_IGN)  // a dead helper must not kill the app on write
         let resources = Bundle.main.resourceURL ?? URL(fileURLWithPath: ".")
-        decider = HelperDecider(python: store.settings["python"] as? String ?? "/usr/bin/python3", script: resources.appendingPathComponent("detector/serve.py"), modelsDir: store.models(bundleResources: resources))
-        decider.onReady = { [weak self] in self?.helperReady = true; self?.refreshStatusTitle() }
-        let mapper = (try? TableMapper(pairsJSON: resources.appendingPathComponent("pairs.json"))) ?? (try! TableMapper(pairsJSON: URL(fileURLWithPath: "pairs.json")))
-        tracker = RunTracker(decider: decider, mapper: mapper, never: store.never, deleteMode: store.settings["deleteMode"] as? String ?? "scalar")
+        tracker = EngineBridge(modelsDir: store.models(bundleResources: resources), config: ["deleteMode": store.settings["deleteMode"] as? String ?? "scalar", "never": Array(store.never)])
+        engineReady = tracker.error == nil
+        if let error = tracker.error { store.debug("Rust engine unavailable: \(error)") }
         storedNever = tracker.never
         tap = KeyTap(tracker: tracker, store: store); tap.enabled = store.settings["enabled"] as? Bool ?? true
-        tracker.onEvent = { [weak self] event in self?.record(event) }
+        tracker.onEvents = { [weak self] event in self?.record(event) }
         buildMenu(); askTrust()
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(appChanged), name: NSWorkspace.didActivateApplicationNotification, object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(inputChanged), name: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String), object: nil)
@@ -55,7 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     private func storeCounts(_ day: String) -> (Int,Int,Int) { let u = store.root.appendingPathComponent("stats.json"); guard let data = try? Data(contentsOf: u), let all = try? JSONSerialization.jsonObject(with: data) as? [String:[String:Int]], let x = all[day] else { return (0,0,0) }; return ((x["runs_th"] ?? 0)+(x["runs_en"] ?? 0)+(x["runs_neutral"] ?? 0), (x["auto_typing"] ?? 0)+(x["auto_space"] ?? 0), (x["undo_backspace"] ?? 0)+(x["undo_shift"] ?? 0)) }
     private func askTrust() { let trusted = AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary); if trusted { isTrusted = true; trustedTimer?.invalidate(); _ = tap.install(); refreshStatusTitle() } else { trustedTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in guard let self, AXIsProcessTrusted() else { return }; self.isTrusted = true; _ = self.tap.install(); self.refreshStatusTitle(); self.trustedTimer?.invalidate() } } }
-    private func refreshStatusTitle() { status.button?.title = isTrusted && helperReady ? "ก⇄A" : "ก⇄A ⚠" }
+    private func refreshStatusTitle() { status.button?.title = isTrusted && engineReady ? "ก⇄A" : "ก⇄A ⚠" }
     private func record(_ event: TrackerEvent) {
         switch event {
         case .runEnded(let l): store.increment("runs_\(l)")
@@ -67,8 +64,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func clearNever() { tracker.clearNever(); store.clearNever(); storedNever = [] }
     @objc private func openData() { NSWorkspace.shared.open(store.root) }
     @objc private func openPrivacy() { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!) }
-    @objc private func quit() { store.flush(); decider.stop(); NSApp.terminate(nil) }
+    @objc private func quit() { store.flush(); NSApp.terminate(nil) }
     @objc private func appChanged() { _ = tracker.handle(.reset) }
     @objc private func inputChanged() { tap.sourceChangedByUser() }
-    func applicationWillTerminate(_ notification: Notification) { store.flush(); decider.stop() }
+    func applicationWillTerminate(_ notification: Notification) { store.flush() }
 }

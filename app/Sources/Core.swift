@@ -11,12 +11,14 @@ enum ReportBuilder {
         guard !trimmed.isEmpty, trimmed.count <= 2000 else { throw ReportError.invalidMessage }
         let allStats = (try? JSONSerialization.jsonObject(with: statsData ?? Data())) as? [String: [String: Int]] ?? [:]
         let today = allStats[day] ?? [:]
+        // Typed pieces: one big literal made older Swift compilers time out while type-checking.
+        func count(_ keys: [String]) -> Int { keys.reduce(0) { $0 + (today[$1] ?? 0) } }
+        let statsToday: [String: Int] = ["runs": count(["runs_th", "runs_en", "runs_neutral"]),
+                                         "conversions": count(["auto_typing", "auto_space"]),
+                                         "undos": count(["undo_backspace", "undo_shift"])]
         var result: [String: Any] = ["schema": 1, "app": "keyflip", "platform": "macos", "app_version": version,
-            "os_version": osVersion, "model": model, "enabled": enabled,
-            "stats_today": ["runs": (today["runs_th"] ?? 0) + (today["runs_en"] ?? 0) + (today["runs_neutral"] ?? 0),
-                            "conversions": (today["auto_typing"] ?? 0) + (today["auto_space"] ?? 0),
-                            "undos": (today["undo_backspace"] ?? 0) + (today["undo_shift"] ?? 0)],
-            "message": trimmed]
+                                     "os_version": osVersion, "model": model, "enabled": enabled, "message": trimmed]
+        result["stats_today"] = statsToday
         let cleanContact = String(contact.trimmingCharacters(in: .whitespacesAndNewlines).prefix(200))
         if !cleanContact.isEmpty { result["contact"] = cleanContact }
         if includeRecentWords {

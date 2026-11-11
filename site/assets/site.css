@@ -740,3 +740,13 @@ details[open] .faq-indicator {
 
 /* 404 page */
 .not-found { padding-block: var(--space-section); }
+
+/* Maker credit: link back to Spark Factor (sparkth.io) */
+.header-by { font: var(--type-small); color: var(--color-slate); text-decoration: none; margin-inline-start: var(--space-sm); padding-block: var(--space-xs); }
+.header-by:hover { color: var(--color-primary); text-decoration: underline; }
+.made-by { display: inline-flex; align-items: center; gap: var(--space-sm); font: var(--type-small); color: var(--color-ink); text-decoration: none; margin-block-end: var(--space-md); min-height: 24px; }
+.made-by img { width: 20px; height: 20px; flex: none; }
+.made-by:hover span { text-decoration: underline; }
+@media (max-width: 479px) { .header-by { display: none; } }
+.site-header-inner > .site-nav { margin-inline-start: auto; }   /* keeps "โดย Spark Factor" next to the wordmark */
+.site-footer-inner > .made-by { flex-basis: 100%; }

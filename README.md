@@ -21,6 +21,8 @@ Two character 5-gram language models (Thai, English) score each word as you type
 the other layout, KeyFlip replaces it and switches the input source. Undo: Backspace right after a conversion, or tap
 Shift twice.
 
+You can also convert text after typing: select text in any app and press Control+Shift+Space (⌃⇧Space on Mac) or Ctrl+Alt+Space (Windows) to replace the selection with the converted text. It converts only words typed in the wrong layout (or flips the whole selection if every word already looks right); undo with Command+Z or Ctrl+Z in that app. This works even when auto-fix is off, never runs in password fields or excluded apps (Terminal, VS Code, etc.), and briefly uses the clipboard while restoring previous clipboard content and marking it so clipboard managers skip it. Enabled by default via the menu item "แปลงข้อความที่เลือก".
+
 ## Repository
 - `core/` — shared Rust core (scorer, models, per-keystroke tracker, C ABI)
 - `app/` — macOS menu-bar app (Swift); `app/package.sh` makes the universal download zip

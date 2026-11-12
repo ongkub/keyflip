@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>KeyFlip app icon (B: keycap on blue, chosen 2026-11-13)</title>
+<link rel="stylesheet" href="../site/fonts/fonts.css">
+<style>
+  /* 1024 canvas, Apple macOS grid: 824 tile at 100,100, continuous-corner radius ~22.4% of the tile */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1024px; height: 1024px; background: transparent; overflow: hidden; }
+  .icon { display: none; position: relative; width: 1024px; height: 1024px; font-family: 'KF Display', sans-serif; }
+  .icon.on { display: block; }
+  .tile { position: absolute; left: 100px; top: 100px; width: 824px; height: 824px; border-radius: 185px; overflow: hidden;
+          filter: drop-shadow(0 14px 22px rgba(15, 25, 60, .28)); }
+  .a { position: absolute; font-weight: 600; color: #5E6678; line-height: 1; }
+  .k { position: absolute; font-weight: 700; color: #2347C6; line-height: 1; }
+
+  /* A: the tile itself is the keycap (white top face, grey bottom edge), like the site favicon */
+  #a .tile { background: #C9D1DD; }
+  #a .face { position: absolute; left: 0; top: 0; right: 0; height: 752px; border-radius: 185px;
+             background: linear-gradient(180deg, #FFFFFF 0%, #F4F6FA 100%); box-shadow: inset 0 -3px 0 #DDE2EA; }
+  #a .a { left: 150px; top: 118px; font-size: 190px; }
+  #a .k { right: 150px; bottom: 150px; font-size: 400px; }
+
+  /* B: blue tile with a white keycap in the middle */
+  #b .tile { background: linear-gradient(160deg, #3D66F0 0%, #2347C6 55%, #1A3699 100%); }
+  #b .cap { position: absolute; left: 152px; top: 140px; width: 520px; height: 540px; border-radius: 110px; background: #C9D1DD;
+            box-shadow: 0 18px 30px rgba(8, 20, 70, .35); }
+  #b .cap .face { position: absolute; left: 0; top: 0; right: 0; height: 494px; border-radius: 110px;
+                  background: linear-gradient(180deg, #FFFFFF 0%, #F1F4F9 100%); }
+  #b .a { left: 72px; top: 58px; font-size: 128px; }
+  #b .k { right: 70px; bottom: 74px; font-size: 270px; }
+
+  /* C: blue tile, two keycaps and a flip arrow (ก ⇄ A) */
+  #c .tile { background: linear-gradient(160deg, #3D66F0 0%, #2347C6 55%, #1A3699 100%); }
+  #c .cap { position: absolute; width: 300px; height: 312px; border-radius: 70px; background: #C9D1DD; box-shadow: 0 14px 24px rgba(8, 20, 70, .35); }
+  #c .cap .face { position: absolute; left: 0; top: 0; right: 0; height: 284px; border-radius: 70px; background: linear-gradient(180deg, #FFFFFF, #F1F4F9);
+                  display: flex; align-items: center; justify-content: center; }
+  #c .c1 { left: 96px; top: 140px; transform: rotate(-6deg); }
+  #c .c2 { right: 96px; bottom: 120px; transform: rotate(6deg); }
+  #c .c1 .face span { font-weight: 700; color: #2347C6; font-size: 190px; line-height: 1; margin-top: 20px; }
+  #c .c2 .face span { font-weight: 600; color: #5E6678; font-size: 170px; line-height: 1; }
+  #c svg { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<div class="icon" id="a"><div class="tile"><div class="face"></div><span class="a">A</span><span class="k">ก</span></div></div>
+<div class="icon" id="b"><div class="tile"><div class="cap"><div class="face"></div><span class="a">A</span><span class="k">ก</span></div></div></div>
+<div class="icon" id="c"><div class="tile">
+  <div class="cap c1"><div class="face"><span>ก</span></div></div>
+  <div class="cap c2"><div class="face"><span>A</span></div></div>
+  <svg width="824" height="824" viewBox="0 0 824 824" fill="none" stroke="#FFE066" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M470 205 C 600 205, 660 260, 672 360"/><path d="M630 330 L672 372 L712 324"/>
+    <path d="M354 620 C 224 620, 164 565, 152 465"/><path d="M194 495 L152 453 L112 501"/>
+  </svg>
+</div></div>
+<script>
+  document.getElementById((location.hash || '#b').slice(1)).classList.add('on');
+</script>
+</body>
+</html>

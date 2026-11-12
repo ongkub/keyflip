@@ -10,6 +10,10 @@ let pairs = try! String(contentsOf: root.appendingPathComponent("app/build/test-
 let bridge = EngineBridge(modelsDir: fixtures, config: config, pairsJSON: pairs)
 if let error = bridge.error { print("engine error: \(error)") }
 check("fixture engine created", bridge.error == nil)
+let selectedRoundTrip = bridge.convertText("a b")
+check("selected text conversion keeps spaces and returns target language", selectedRoundTrip?.text == "ก ข" && (selectedRoundTrip?.changed ?? 0) > 0 && selectedRoundTrip?.lang == .th)
+let emptySelection = bridge.convertText("")
+check("empty selected text is unchanged", emptySelection?.text == "" && emptySelection?.changed == 0)
 var events: [TrackerEvent] = []
 bridge.onEvents = { events.append($0) }
 _ = bridge.handle(.char("a"))

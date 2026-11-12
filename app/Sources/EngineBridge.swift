@@ -49,6 +49,19 @@ final class EngineBridge {
 
     func clearNever() { if let engine { kf_never_clear(engine) } }
 
+    func convertText(_ text: String) -> (text: String, changed: Int, lang: Lang?)? {
+        guard let engine else { return nil }
+        let raw: UnsafeMutablePointer<CChar>? = text.withCString { kf_convert_text(engine, $0) }
+        guard let raw else { return nil }
+        defer { kf_string_free(raw) }
+        guard let data = String(cString: raw).data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let converted = object["text"] as? String,
+              let changed = (object["changed"] as? NSNumber)?.intValue else { return nil }
+        let lang = (object["lang"] as? String).flatMap(Lang.init(rawValue:))
+        return (converted, changed, lang)
+    }
+
     func handle(_ key: Key) -> Action {
         guard let engine else { return .pass }
         let kind: UInt32

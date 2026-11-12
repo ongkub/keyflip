@@ -11,7 +11,7 @@ final class Store {
         try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let settingsURL = root.appendingPathComponent("settings.json")
         if let data = try? Data(contentsOf: settingsURL), let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] { settings = obj }
-        else { settings = ["enabled": true, "undoShiftTapMs": 400, "deleteMode": "scalar", "excludedBundlePrefixes": prefixes]; saveSettings() }
+        else { settings = ["enabled": true, "selectionHotkey": true, "undoShiftTapMs": 400, "deleteMode": "scalar", "excludedBundlePrefixes": prefixes]; saveSettings() }
         if settings.removeValue(forKey: "python") != nil || settings.removeValue(forKey: "modelsDir") != nil { saveSettings() }
         let neverURL = root.appendingPathComponent("never.txt"); if let text = try? String(contentsOf: neverURL, encoding: .utf8) { never = Set(text.split(whereSeparator: \.isNewline).map(String.init)) }
         if let data = try? Data(contentsOf: root.appendingPathComponent("stats.json")), let obj = try? JSONSerialization.jsonObject(with: data) as? [String: [String: Int]] { stats = obj }

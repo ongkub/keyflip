@@ -14,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var tap: KeyTap!
     private var status: NSStatusItem!
     private var toggle: NSMenuItem!
+    private var selectionToggle: NSMenuItem!
     private var info: NSMenuItem!
     private var modelInfo: NSMenuItem!
     private var reportItem: NSMenuItem!
@@ -40,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength); status.button?.title = "ก⇄A ⚠"
         let menu = NSMenu(); menu.delegate = self
         toggle = NSMenuItem(title: "แก้ภาษาอัตโนมัติ", action: #selector(toggleEnabled), keyEquivalent: ""); toggle.target = self; menu.addItem(toggle)
+        selectionToggle = NSMenuItem(title: "แปลงข้อความที่เลือก (⌃⇧Space)", action: #selector(toggleSelectionHotkey), keyEquivalent: ""); selectionToggle.target = self; menu.addItem(selectionToggle)
         info = NSMenuItem(title: "วันนี้: พิมพ์ 0 คำ · แก้ให้ 0 · ย้อน 0", action: nil, keyEquivalent: ""); info.isEnabled = false; menu.addItem(info)
         modelInfo = NSMenuItem(title: "โมเดล: ทั่วไป", action: nil, keyEquivalent: ""); modelInfo.isEnabled = false; menu.addItem(modelInfo)
         menu.addItem(.separator()); clearItem = NSMenuItem(title: "ล้างคำที่ตั้งไม่ให้แปลง", action: #selector(clearNever), keyEquivalent: ""); clearItem.target = self; menu.addItem(clearItem); reportItem = NSMenuItem(title: "แจ้งปัญหา…", action: #selector(showReport), keyEquivalent: ""); reportItem.target = self; menu.addItem(reportItem); add(menu,"เปิดโฟลเดอร์ข้อมูล",#selector(openData)); add(menu,"ตั้งค่าสิทธิ์ Accessibility…",#selector(openPrivacy)); menu.addItem(.separator()); add(menu,"ออก",#selector(quit)); status.menu = menu; menuWillOpen(menu)
@@ -49,6 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let d = ISO8601DateFormatter(); d.formatOptions = [.withFullDate]; let counts = storeCounts(d.string(from: Date()))
         info.title = "วันนี้: พิมพ์ \(counts.0) คำ · แก้ให้ \(counts.1) · ย้อน \(counts.2)"
         toggle.state = (store.settings["enabled"] as? Bool ?? true) ? .on : .off
+        selectionToggle.state = (store.settings["selectionHotkey"] as? Bool ?? true) ? .on : .off
         clearItem.title = "ล้างคำที่ตั้งไม่ให้แปลง (\(tracker.never.count))"; clearItem.isEnabled = !tracker.never.isEmpty
         let resource = Bundle.main.resourceURL ?? URL(fileURLWithPath: "."); let personal = store.models(bundleResources: resource).path.contains("Application Support"); modelInfo.title = personal ? "โมเดล: ส่วนตัว" : "โมเดล: ทั่วไป"
     }
@@ -63,6 +66,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
     @objc private func toggleEnabled() { let value = !(store.settings["enabled"] as? Bool ?? true); store.settings["enabled"] = value; store.saveSettings(); tap.enabled = value; if !value { _ = tracker.handle(.reset) }; menuWillOpen(status.menu!) }
+    @objc private func toggleSelectionHotkey() { store.settings["selectionHotkey"] = !(store.settings["selectionHotkey"] as? Bool ?? true); store.saveSettings(); menuWillOpen(status.menu!) }
     @objc private func clearNever() { tracker.clearNever(); store.clearNever(); storedNever = [] }
     @objc private func showReport() {
         let resources = Bundle.main.resourceURL ?? URL(fileURLWithPath: ".")

@@ -10,6 +10,11 @@ final class KeyTap {
     private var shiftDown: [Int64: Date] = [:]
     private var lastShift: Date?
     private var expectedSource: String?
+    private lazy var selection = Selection(store: store, convert: { [weak self] text in
+        DispatchQueue.main.sync { self?.tracker.convertText(text) }
+    }, select: { [weak self] lang in self?.select(lang) }, completed: { [weak self] in
+        self?.store.increment("selection")
+    })
     var enabled = true
     init(tracker: EngineBridge, store: Store) { self.tracker = tracker; self.store = store }
     func install() -> Bool {
@@ -32,10 +37,21 @@ final class KeyTap {
         }
         guard type == .keyDown else { return Unmanaged.passUnretained(event) }
         shiftDown.removeAll(); lastShift = nil
-        if !enabled || IsSecureEventInputEnabled() || store.excluded(NSWorkspace.shared.frontmostApplication?.bundleIdentifier) || !supportedSource() { _ = tracker.handle(.reset); return Unmanaged.passUnretained(event) }
         let flags = event.flags
-        if flags.contains(.maskCommand) || flags.contains(.maskControl) || flags.contains(.maskAlternate) { _ = tracker.handle(.reset); return Unmanaged.passUnretained(event) }
         let kc = event.getIntegerValueField(.keyboardEventKeycode)
+        let selectionHotkey = kc == 49 && event.getIntegerValueField(.keyboardEventAutorepeat) == 0 &&
+            flags.contains(.maskControl) && flags.contains(.maskShift) &&
+            !flags.contains(.maskCommand) && !flags.contains(.maskAlternate)
+        if selectionHotkey,
+           store.settings["selectionHotkey"] as? Bool ?? true,
+           !IsSecureEventInputEnabled(),
+           !store.excluded(NSWorkspace.shared.frontmostApplication?.bundleIdentifier),
+           selection.begin() {
+            _ = tracker.handle(.reset)
+            return nil
+        }
+        if !enabled || IsSecureEventInputEnabled() || store.excluded(NSWorkspace.shared.frontmostApplication?.bundleIdentifier) || !supportedSource() { _ = tracker.handle(.reset); return Unmanaged.passUnretained(event) }
+        if flags.contains(.maskCommand) || flags.contains(.maskControl) || flags.contains(.maskAlternate) { _ = tracker.handle(.reset); return Unmanaged.passUnretained(event) }
         let key: Key
         switch kc { case 49: key = .space; case 48: key = .tab; case 36,76: key = .returnKey; case 51: key = .backspace; case 53,115,116,117,119,121,123,124,125,126: _ = tracker.handle(.reset); return Unmanaged.passUnretained(event); default:
             var length = 0; var chars = [UniChar](repeating: 0, count: 16); event.keyboardGetUnicodeString(maxStringLength: 16, actualStringLength: &length, unicodeString: &chars); if length == 0 { _ = tracker.handle(.reset); return Unmanaged.passUnretained(event) }; key = .char(String(utf16CodeUnits: chars, count: length))
@@ -65,7 +81,7 @@ final class KeyTap {
         if !chunk.isEmpty { post(0,true,chunk); post(0,false) }
     }
     private func supportedSource() -> Bool { guard let src = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue(), let id = TISGetInputSourceProperty(src, kTISPropertyInputSourceID) else { return false }; let name = Unmanaged<CFString>.fromOpaque(id).takeUnretainedValue() as String; return name == "com.apple.keylayout.Thai" || name == "com.apple.keylayout.ABC" || name == "com.apple.keylayout.US" }
-    private func select(_ lang: Lang) {
+    func select(_ lang: Lang) {
         let list = TISCreateInputSourceList([kTISPropertyInputSourceIsEnabled as String: true] as CFDictionary, false).takeRetainedValue() as NSArray
         let candidates = lang == .th ? ["com.apple.keylayout.Thai"] : ["com.apple.keylayout.ABC", "com.apple.keylayout.US"]
         for item in list { let src = item as! TISInputSource; guard let ptr = TISGetInputSourceProperty(src,kTISPropertyInputSourceID) else { continue }; let id = Unmanaged<CFString>.fromOpaque(ptr).takeUnretainedValue() as String; if candidates.contains(id) { expectedSource = id; let r = TISSelectInputSource(src); dbg("select \(id) status=\(r) now=\(currentID())"); break } }

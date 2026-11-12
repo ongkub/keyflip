@@ -13,6 +13,8 @@ use std::{
 #[serde(default, rename_all = "camelCase")]
 pub struct Settings {
     pub enabled: bool,
+    #[serde(default = "selection_default")]
+    pub selection_hotkey: bool,
     pub models_dir: Option<PathBuf>,
     pub delete_mode: String,
     pub undo_shift_tap_ms: u64,
@@ -20,10 +22,17 @@ pub struct Settings {
     #[serde(flatten)]
     pub extra: Map<String, Value>,
 }
+fn selection_default() -> bool {
+    true
+}
+pub fn selection_hotkey_matches(vk: u32, down: bool, ctrl: bool, alt: bool, win: bool) -> bool {
+    vk == 0x20 && down && ctrl && alt && !win
+}
 impl Default for Settings {
     fn default() -> Self {
         Self {
             enabled: true,
+            selection_hotkey: true,
             models_dir: None,
             delete_mode: "scalar".into(),
             undo_shift_tap_ms: 400,
@@ -227,6 +236,7 @@ mod tests {
         let root = data_root(&tmp.0);
         let mut store = Store::open(root.clone()).unwrap();
         assert!(store.settings.enabled);
+        assert!(store.settings.selection_hotkey);
         assert_eq!(store.settings.delete_mode, "scalar");
         assert_eq!(store.settings.undo_shift_tap_ms, 400);
         assert_eq!(store.settings.excluded_processes.len(), 10);
@@ -247,6 +257,26 @@ mod tests {
         assert_eq!(
             fs::read_to_string(loaded.root.join("never.txt")).unwrap(),
             ""
+        );
+    }
+    #[test]
+    fn selection_hotkey_modifier_matching() {
+        assert!(selection_hotkey_matches(0x20, true, true, true, false));
+        assert!(!selection_hotkey_matches(0x20, true, true, true, true));
+        assert!(!selection_hotkey_matches(0x20, true, true, false, false));
+        assert!(!selection_hotkey_matches(0x20, false, true, true, false));
+    }
+    #[test]
+    fn selection_hotkey_defaults_and_roundtrips() {
+        let old: Settings = serde_json::from_str(r#"{"enabled":false}"#).unwrap();
+        assert!(old.selection_hotkey);
+        let mut settings = old;
+        settings.selection_hotkey = false;
+        let saved = serde_json::to_string(&settings).unwrap();
+        assert!(
+            !serde_json::from_str::<Settings>(&saved)
+                .unwrap()
+                .selection_hotkey
         );
     }
     #[test]

@@ -33,10 +33,15 @@ pub const WORK: u32 = WM_APP + 1;
 pub const TOGGLE: u32 = WM_APP + 2;
 pub const CLEAR: u32 = WM_APP + 3;
 pub const STOP: u32 = WM_APP + 4;
+pub const SELECT_CONVERT: u32 = WM_APP + 5;
+pub const SELECT_COUNT: u32 = WM_APP + 7;
+pub const SELECTION_TOGGLE: u32 = WM_APP + 6;
+static SPACE_HELD: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 #[derive(Default, Clone)]
 pub struct Snapshot {
     pub enabled: bool,
+    pub selection_enabled: bool,
     pub counts: (u64, u64, u64),
     pub day: String,
     pub never: usize,
@@ -46,6 +51,8 @@ pub type Shared = Arc<Mutex<Snapshot>>;
 enum Save {
     Record(Vec<TrackerEvent>, Vec<String>, String),
     Enabled(bool),
+    Selection(bool),
+    SelectionCount,
     Clear,
 }
 fn storage(mut store: Store, shared: Shared) -> (Sender<Save>, JoinHandle<()>) {
@@ -63,6 +70,20 @@ fn storage(mut store: Store, shared: Shared) -> (Sender<Save>, JoinHandle<()>) {
                 Save::Enabled(enabled) => {
                     store.settings.enabled = enabled;
                     store.save_settings()
+                }
+                Save::Selection(enabled) => {
+                    store.settings.selection_hotkey = enabled;
+                    store.save_settings()
+                }
+                Save::SelectionCount => {
+                    let day = store::timestamp(store::now()).0;
+                    *store
+                        .stats
+                        .entry(day)
+                        .or_default()
+                        .entry("selection".into())
+                        .or_default() += 1;
+                    store.flush()
                 }
                 Save::Clear => store.set_never(BTreeSet::new()),
             };
@@ -99,6 +120,8 @@ struct Runtime {
     save: Sender<Save>,
     jobs: VecDeque<Job>,
     thread_id: u32,
+    selection_enabled: bool,
+    selection_rx: std::sync::mpsc::Receiver<(String, Sender<Option<(String, usize, Lang)>>)>,
 }
 thread_local! { static STATE: RefCell<Option<Runtime>> = const { RefCell::new(None) }; }
 impl Runtime {
@@ -155,6 +178,41 @@ impl Runtime {
         let vk = h.vkCode;
         let hwnd = GetForegroundWindow();
         let token = self.privacy.allowed(hwnd);
+        let ctrl = pressed(VK_CONTROL) || (down && matches!(vk, 0x11 | 0xa2 | 0xa3));
+        let alt = pressed(VK_MENU) || (down && matches!(vk, 0x12 | 0xa4 | 0xa5));
+        let win = pressed(VK_LWIN) || pressed(VK_RWIN) || (down && matches!(vk, 0x5b | 0x5c));
+        if store::selection_hotkey_matches(vk, down, ctrl, alt, win)
+            || (vk == VK_SPACE.0 as u32 && ctrl && alt && !win && !down)
+        {
+            if down {
+                if SPACE_HELD.load(std::sync::atomic::Ordering::SeqCst) {
+                    return true;
+                }
+                if self.selection_enabled && token.is_some() {
+                    SPACE_HELD.store(true, std::sync::atomic::Ordering::SeqCst);
+                    if !crate::selection::FLOW_ACTIVE
+                        .swap(true, std::sync::atomic::Ordering::SeqCst)
+                    {
+                        self.reset();
+                        crate::selection::start(
+                            self.thread_id,
+                            hwnd,
+                            token.unwrap(),
+                            self.en,
+                            self.th,
+                            self.privacy.clone(),
+                        );
+                    }
+                    return true;
+                }
+            }
+        }
+        if vk == VK_SPACE.0 as u32
+            && !down
+            && SPACE_HELD.swap(false, std::sync::atomic::Ordering::SeqCst)
+        {
+            return true;
+        }
         if !self.enabled || token.is_none() {
             self.reset();
             return false;
@@ -245,6 +303,19 @@ impl Runtime {
             let _ = self
                 .save
                 .send(Save::Record(job.events, job.learned, self.privacy.app()));
+        }
+    }
+    unsafe fn selection_work(&mut self) {
+        if let Ok((text, reply)) = self.selection_rx.try_recv() {
+            let result = self
+                .engine
+                .as_ref()
+                .map(|engine| {
+                    let c = keyflip_core::selection::convert_selection(engine.detector(), &text);
+                    c.lang.map(|lang| (c.text, c.changed, lang))
+                })
+                .flatten();
+            let _ = reply.send(result);
         }
     }
 }
@@ -387,7 +458,10 @@ pub fn start(store: Store, shared: Shared) -> Result<Hook, String> {
         };
         shared.lock().unwrap().enabled = enabled;
         let privacy = Arc::new(Privacy::new());
+        let (selection_tx, selection_rx) = mpsc::channel();
+        crate::selection::configure(selection_tx.clone());
         let query = uia::start(privacy.clone(), store.settings.excluded_processes.clone());
+        let selection_enabled = store.settings.selection_hotkey;
         let (save, writer) = storage(store, shared.clone());
         STATE.with(|state| {
             *state.borrow_mut() = Some(Runtime {
@@ -403,6 +477,8 @@ pub fn start(store: Store, shared: Shared) -> Result<Hook, String> {
                 save,
                 jobs: VecDeque::new(),
                 thread_id: id,
+                selection_enabled,
+                selection_rx,
             })
         });
         let module = GetModuleHandleW(None).ok().map(Into::into);
@@ -447,6 +523,10 @@ pub fn start(store: Store, shared: Shared) -> Result<Hook, String> {
                     let s = state.as_mut().unwrap();
                     match message.message {
                         WORK => s.work(),
+                        SELECT_CONVERT => s.selection_work(),
+                        SELECT_COUNT => {
+                            let _ = s.save.send(Save::SelectionCount);
+                        }
                         TOGGLE => {
                             s.reset();
                             if s.engine.is_some() {
@@ -454,6 +534,11 @@ pub fn start(store: Store, shared: Shared) -> Result<Hook, String> {
                                 let _ = s.save.send(Save::Enabled(s.enabled));
                                 shared.lock().unwrap().enabled = s.enabled;
                             }
+                        }
+                        SELECTION_TOGGLE => {
+                            s.selection_enabled = !s.selection_enabled;
+                            let _ = s.save.send(Save::Selection(s.selection_enabled));
+                            shared.lock().unwrap().selection_enabled = s.selection_enabled;
                         }
                         CLEAR => {
                             s.reset();

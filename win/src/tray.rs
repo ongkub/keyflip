@@ -23,6 +23,7 @@ use windows::{
 
 const CALLBACK: u32 = WM_APP + 20;
 const TOGGLE: usize = 1;
+const SELECTION_TOGGLE: usize = 7;
 const CLEAR: usize = 2;
 const OPEN: usize = 3;
 const EXIT: usize = 4;
@@ -412,6 +413,17 @@ unsafe fn menu(hwnd: HWND, thread_id: u32, root: PathBuf, mut snapshot: Snapshot
         MF_UNCHECKED
     };
     let _ = AppendMenuW(menu, MF_STRING | checked, TOGGLE, w!("แก้ภาษาอัตโนมัติ"));
+    let selection_checked = if snapshot.selection_enabled {
+        MF_CHECKED
+    } else {
+        MF_UNCHECKED
+    };
+    let _ = AppendMenuW(
+        menu,
+        MF_STRING | selection_checked,
+        SELECTION_TOGGLE,
+        w!("แปลงข้อความที่เลือก (Ctrl+Alt+Space)"),
+    );
     let info = wide(&format!(
         "วันนี้: พิมพ์ {} คำ · แก้ให้ {} · ย้อน {}",
         snapshot.counts.0, snapshot.counts.1, snapshot.counts.2
@@ -452,6 +464,9 @@ unsafe fn menu(hwnd: HWND, thread_id: u32, root: PathBuf, mut snapshot: Snapshot
     match command {
         TOGGLE => {
             let _ = PostThreadMessageW(thread_id, hook::TOGGLE, WPARAM(0), LPARAM(0));
+        }
+        SELECTION_TOGGLE => {
+            let _ = PostThreadMessageW(thread_id, hook::SELECTION_TOGGLE, WPARAM(0), LPARAM(0));
         }
         CLEAR => {
             let _ = PostThreadMessageW(thread_id, hook::CLEAR, WPARAM(0), LPARAM(0));
@@ -592,6 +607,7 @@ pub fn run() -> Result<(), String> {
         };
         let shared = Arc::new(Mutex::new(Snapshot {
             enabled: store.settings.enabled,
+            selection_enabled: store.settings.selection_hotkey,
             counts: store.counts(&store::timestamp(store::now()).0),
             day: store::timestamp(store::now()).0,
             never: store.never.len(),

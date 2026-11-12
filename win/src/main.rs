@@ -13,6 +13,8 @@ mod keys;
 mod pairs;
 mod privacy;
 mod report;
+#[cfg(windows)]
+mod selection;
 mod shift_tap;
 mod store;
 #[cfg(windows)]

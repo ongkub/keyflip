@@ -151,11 +151,46 @@
     selectTab(initialTab, false);
   }
 
+  // The download buttons open the install page for that OS, which starts the download itself, so people learn why
+  // the first-open warning appears before they meet it. Without JS (or with a modifier key) the link downloads directly.
+  function initInstallRedirect() {
+    var pages = { 'download-mac': '/download/mac/', 'download-win': '/download/windows/' };
+    Object.keys(pages).forEach(function (panelId) {
+      var panel = document.getElementById(panelId);
+      var button = panel && panel.querySelector('a.btn-primary[download]');
+      if (!button) return;
+      button.addEventListener('click', function (e) {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        window.location.href = pages[panelId] + '?start=1';
+      });
+    });
+  }
+
+  // On an install page opened from a download button (?start=1): start the download once, then drop the flag
+  // so a reload or a shared link does not download again.
+  function initAutoDownload() {
+    var link = document.getElementById('download-fallback');
+    if (!link || !/[?&]start=1(&|$)/.test(window.location.search)) return;
+    // The page reads as a plain install guide; only now does it say the download is starting.
+    Array.prototype.forEach.call(document.querySelectorAll('#download-status [data-active]'), function (el) {
+      el.textContent = el.getAttribute('data-active');
+    });
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+    }
+    setTimeout(function () {
+      window.location.href = link.href;
+    }, 600);
+  }
+
   function init() {
     var detectedOs = detectOS();
     initDownloadPanels(detectedOs);
     initMobileNotice();
     initTabs(detectedOs);
+    initInstallRedirect();
+    initAutoDownload();
   }
 
   if (document.readyState === 'loading') {

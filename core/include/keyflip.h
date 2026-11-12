@@ -36,6 +36,7 @@ KFAction kf_key(KFEngine *e, uint32_t key_kind /* 0 char,1 space,2 tab,3 return,
  * or neutral for runEnded. kind is typing/space/backspace/shift.
  */
 char *kf_take_events(KFEngine *e); /* JSON array since last call (drains queue) */
+char *kf_convert_text(KFEngine *e, const char *text); /* Convert selected text; caller frees JSON with kf_string_free. */
 char *kf_never_get(KFEngine *e);   /* JSON array of strings, sorted */
 void kf_never_set(KFEngine *e, const char *json_array); /* invalid JSON ignored */
 void kf_never_clear(KFEngine *e);

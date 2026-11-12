@@ -180,6 +180,27 @@ pub unsafe extern "C" fn kf_take_events(e: *mut KFEngine) -> *mut c_char {
             .unwrap_or(ptr::null_mut())
     })
 }
+/// Convert explicitly selected UTF-8 text and return caller-owned JSON.
+/// # Safety
+/// `e` must be null or live on its owning thread; `text_ptr` must be a valid
+/// NUL-terminated UTF-8 string.
+#[no_mangle]
+pub unsafe extern "C" fn kf_convert_text(e: *mut KFEngine, text_ptr: *const c_char) -> *mut c_char {
+    guard(ptr::null_mut(), || {
+        let Some(e) = e.as_ref() else {
+            return ptr::null_mut();
+        };
+        let Ok(input) = text(text_ptr) else {
+            return ptr::null_mut();
+        };
+        serde_json::to_string(&crate::selection::convert_selection(
+            e.engine.detector(),
+            input,
+        ))
+        .map(owned_string)
+        .unwrap_or(ptr::null_mut())
+    })
+}
 /// # Safety
 /// `e` must be null or a live handle on its owning thread.
 #[no_mangle]

@@ -4,6 +4,7 @@ pub mod engine;
 pub mod ffi;
 pub mod keymap;
 pub mod model;
+pub mod selection;
 pub mod tracker;
 
 pub use detect::{Config, Decision, Detector};

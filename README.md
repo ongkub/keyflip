@@ -3,7 +3,7 @@
 แก้คำที่พิมพ์ผิดภาษาให้อัตโนมัติระหว่างพิมพ์ (แป้นไทยเกษมณี ⇄ อังกฤษ) — พิมพ์ `vpkdwxdbo-hk;` แล้วได้ "อยากไปกินข้าว"
 พร้อมสลับแป้นให้เอง · Fixes words typed with the wrong keyboard layout (Thai Kedmanee ⇄ English) while you type.
 
-**Status: public beta 0.3.0** for macOS 13+ (Apple Silicon and Intel) and Windows 64-bit.
+**Status: public beta 0.3.1** for macOS 13+ (Apple Silicon and Intel) and Windows 64-bit.
 
 ## ดาวน์โหลด · Download
 [หน้าดาวน์โหลด (Releases)](https://github.com/ongkub/keyflip/releases) — เลือก `KeyFlip-macOS-beta-…zip` หรือ

@@ -225,6 +225,7 @@ unsafe fn open_report(owner: HWND) {
     let wc = WNDCLASSW {
         lpfnWndProc: Some(wndproc),
         hInstance: instance.into(),
+        hIcon: app_icon(false),
         lpszClassName: PCWSTR(class.as_ptr()),
         hCursor: LoadCursorW(None, IDC_ARROW).unwrap_or_default(),
         ..Default::default()
@@ -388,11 +389,42 @@ unsafe fn icon(hwnd: HWND) -> NOTIFYICONDATAW {
         uID: 1,
         uFlags: NIF_MESSAGE | NIF_ICON | NIF_TIP,
         uCallbackMessage: CALLBACK,
-        hIcon: LoadIconW(None, IDI_APPLICATION).unwrap_or_default(),
+        hIcon: app_icon(true),
         ..Default::default()
     };
     copy_text(&mut data.szTip, "KeyFlip · ก ⇄ A");
     data
+}
+unsafe fn app_icon(small: bool) -> HICON {
+    use std::sync::OnceLock;
+
+    // Cached as the handle's address: HICON wraps a raw pointer, which a static cannot hold.
+    static SMALL_ICON: OnceLock<usize> = OnceLock::new();
+    static LARGE_ICON: OnceLock<usize> = OnceLock::new();
+    let cache = if small { &SMALL_ICON } else { &LARGE_ICON };
+    let handle = *cache.get_or_init(|| {
+        let (width, height) = if small {
+            (GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON))
+        } else {
+            (GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON))
+        };
+        GetModuleHandleW(None)
+            .ok()
+            .and_then(|module| {
+                LoadImageW(
+                    Some(module.into()),
+                    PCWSTR(1usize as *const u16),
+                    IMAGE_ICON,
+                    width,
+                    height,
+                    LR_SHARED,
+                )
+                .ok()
+            })
+            .map(|handle| handle.0 as usize)
+            .unwrap_or_else(|| LoadIconW(None, IDI_APPLICATION).unwrap_or_default().0 as usize)
+    });
+    HICON(handle as *mut _)
 }
 unsafe fn notice(hwnd: HWND, text: &str) {
     let mut data = icon(hwnd);
@@ -617,6 +649,7 @@ pub fn run() -> Result<(), String> {
         let class = WNDCLASSW {
             lpfnWndProc: Some(wndproc),
             hInstance: instance.into(),
+            hIcon: app_icon(false),
             lpszClassName: w!("KeyFlipTrayWindow"),
             ..Default::default()
         };

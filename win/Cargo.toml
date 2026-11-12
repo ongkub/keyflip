@@ -5,6 +5,9 @@ edition = "2021"
 license = "MIT"
 description = "KeyFlip for Windows: tray app that fixes words typed in the wrong keyboard layout"
 
+[build-dependencies]
+winresource = "0.1"
+
 [[bin]]
 name = "keyflip"
 path = "src/main.rs"

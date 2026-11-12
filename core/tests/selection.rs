@@ -51,6 +51,8 @@ fn requested_selection_examples_and_fallback() {
     let e = convert_selection(detector, "สวัสดี");
     assert_eq!((e.text.as_str(), e.lang), ("l;ylfu", Some(Lang::En)));
     assert_eq!(convert_selection(detector, "l;ylfu 2026").text, "สวัสดี 2026");
+    let two = convert_selection(detector, "l;ylfu vpkdwxdbo-hk;");
+    assert_eq!((two.text.as_str(), two.changed), ("สวัสดี อยากไปกินข้าว", 2));
     assert_eq!(convert_selection(detector, "2026").text, "2026");
 }
 

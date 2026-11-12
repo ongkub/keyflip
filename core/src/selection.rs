@@ -56,7 +56,12 @@ pub fn convert_selection(detector: &Detector, text: &str) -> Converted {
                 output.push_str(&run);
             }
             if source != Lang::Neutral {
-                previous = Some(source);
+                // Same as the typing path: after a conversion the context is the language the text is now in.
+                previous = Some(if decision.convert {
+                    decision.target
+                } else {
+                    source
+                });
             }
         }
         offset = end;

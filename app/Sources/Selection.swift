@@ -2,7 +2,8 @@ import AppKit
 import ApplicationServices
 import Carbon
 
-/// Runs clipboard and accessibility work away from the event tap callback.
+/// Runs the copy-convert-paste flow away from the event tap callback. Waits happen on a worker queue;
+/// every pasteboard access hops to the main thread (AppKit), and the text itself is never logged.
 final class Selection {
     private let store: Store
     private let convert: (String) -> (text: String, changed: Int, lang: Lang?)?
@@ -10,6 +11,7 @@ final class Selection {
     private let completed: () -> Void
     private let lock = NSLock()
     private var running = false
+    private var debug = false
     private let systemWide = AXUIElementCreateSystemWide()
 
     init(store: Store, convert: @escaping (String) -> (text: String, changed: Int, lang: Lang?)?,
@@ -17,11 +19,12 @@ final class Selection {
         self.store = store; self.convert = convert; self.select = select; self.completed = completed
     }
 
-    /// Claims the sole active slot and immediately schedules all waits on a worker queue.
+    /// Called on the main thread by the tap. Claims the sole active slot and schedules the flow on a worker queue.
     func begin() -> Bool {
         lock.lock(); defer { lock.unlock() }
         guard !running else { return false }
         running = true
+        debug = store.settings["debug"] as? Bool == true   // read here, on the main thread
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
             defer { self.lock.lock(); self.running = false; self.lock.unlock() }
@@ -38,33 +41,42 @@ final class Selection {
             if !flags.contains(.maskControl) && !flags.contains(.maskShift) { break }
             Thread.sleep(forTimeInterval: 0.01)
         }
-        let before = snapshotPasteboard()
-        guard let before else { dbg("selection clipboard snapshot failed"); return }
-        let board = NSPasteboard.general
-        let oldCount = board.changeCount
+        guard let before = onMain({ self.snapshotPasteboard() }) else { dbg("selection clipboard snapshot failed"); return }
+        let oldCount = onMain { NSPasteboard.general.changeCount }
         postShortcut(8)
-        let copied = waitForChange(from: oldCount, milliseconds: 400)
-        guard copied else { dbg("selection copy unchanged"); return }
-        guard let original = board.string(forType: .string), !original.isEmpty, original.count <= 5000 else {
-            restore(before); dbg("selection copy invalid length"); return
+        guard waitForChange(from: oldCount, milliseconds: 400) else { dbg("selection copy unchanged"); return }
+        Thread.sleep(forTimeInterval: 0.03)   // let the app finish writing all its types
+        let (copied, copiedCount) = onMain { (NSPasteboard.general.string(forType: .string), NSPasteboard.general.changeCount) }
+        // From here on, give the user's pasteboard back only while it still holds our copy (or our converted text):
+        // they may have copied something else in the meantime.
+        let giveBack = { (expected: Int) in self.onMain { if NSPasteboard.general.changeCount == expected { self.restore(before) } } }
+        guard let original = copied, !original.isEmpty, original.count <= 5000 else {
+            giveBack(copiedCount); dbg("selection copy invalid length"); return
         }
         guard let result = convert(original), result.changed > 0, result.text != original else {
-            restore(before); dbg("selection conversion unchanged length=\(original.count)"); return
+            giveBack(copiedCount); dbg("selection conversion unchanged length=\(original.count)"); return
         }
-        board.clearContents()
-        let item = NSPasteboardItem()
-        item.setString(result.text, forType: .string)
-        item.setData(Data(), forType: NSPasteboard.PasteboardType("org.nspasteboard.TransientType"))
-        item.setData(Data(), forType: NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType"))
-        board.writeObjects([item])
-        let convertedCount = board.changeCount
+        let convertedCount: Int? = onMain {
+            let board = NSPasteboard.general
+            guard board.changeCount == copiedCount else { return nil }
+            board.clearContents()
+            let item = NSPasteboardItem()
+            item.setString(result.text, forType: .string)
+            item.setData(Data(), forType: NSPasteboard.PasteboardType("org.nspasteboard.TransientType"))
+            item.setData(Data(), forType: NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType"))
+            board.writeObjects([item])
+            return board.changeCount
+        }
+        guard let convertedCount else { dbg("selection pasteboard changed during conversion"); return }
         postShortcut(9)
         Thread.sleep(forTimeInterval: 0.5)   // slow apps (Word) read the pasteboard late; restoring early would paste the old content
-        if board.changeCount == convertedCount { restore(before) }
+        giveBack(convertedCount)
         if let lang = result.lang { DispatchQueue.main.async { self.select(lang) } }
         DispatchQueue.main.async { self.completed() }
         dbg("selection converted in=\(original.count) out=\(result.text.count)")
     }
+
+    private func onMain<T>(_ work: () -> T) -> T { Thread.isMainThread ? work() : DispatchQueue.main.sync(execute: work) }
 
     private func selectedLength() -> Int? {
         AXUIElementSetMessagingTimeout(systemWide, 0.03)
@@ -100,10 +112,10 @@ final class Selection {
 
     private func waitForChange(from count: Int, milliseconds: Int) -> Bool {
         for _ in 0..<(milliseconds / 10) {
-            if NSPasteboard.general.changeCount != count { return true }
+            if onMain({ NSPasteboard.general.changeCount }) != count { return true }
             Thread.sleep(forTimeInterval: 0.01)
         }
-        return NSPasteboard.general.changeCount != count
+        return onMain { NSPasteboard.general.changeCount } != count
     }
 
     private func postShortcut(_ key: CGKeyCode) {
@@ -115,7 +127,8 @@ final class Selection {
         }
     }
 
+    /// Lengths and outcomes only, never the text.
     private func dbg(_ line: String) {
-        if store.settings["debug"] as? Bool == true { store.debug(line) }
+        if debug { DispatchQueue.main.async { self.store.debug(line) } }
     }
 }

@@ -1,6 +1,7 @@
 import AppKit
 import ApplicationServices
 import Carbon
+import ServiceManagement
 
 // No nib: create the delegate ourselves (NSApplicationMain would never instantiate it).
 @main enum KeyFlipMain {
@@ -15,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var status: NSStatusItem!
     private var toggle: NSMenuItem!
     private var selectionToggle: NSMenuItem!
+    private var loginToggle: NSMenuItem!
     private var info: NSMenuItem!
     private var modelInfo: NSMenuItem!
     private var reportItem: NSMenuItem!
@@ -33,7 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         storedNever = tracker.never
         tap = KeyTap(tracker: tracker, store: store); tap.enabled = store.settings["enabled"] as? Bool ?? true
         tracker.onEvents = { [weak self] event in self?.record(event) }
-        buildMenu(); askTrust()
+        buildMenu(); askTrust(); syncLoginItem()
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(appChanged), name: NSWorkspace.didActivateApplicationNotification, object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(inputChanged), name: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String), object: nil)
     }
@@ -42,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let menu = NSMenu(); menu.delegate = self
         toggle = NSMenuItem(title: "แก้ภาษาอัตโนมัติ", action: #selector(toggleEnabled), keyEquivalent: ""); toggle.target = self; menu.addItem(toggle)
         selectionToggle = NSMenuItem(title: "แปลงข้อความที่เลือก (⌃⇧Space)", action: #selector(toggleSelectionHotkey), keyEquivalent: ""); selectionToggle.target = self; menu.addItem(selectionToggle)
+        loginToggle = NSMenuItem(title: "เปิดพร้อมเครื่อง", action: #selector(toggleLogin), keyEquivalent: ""); loginToggle.target = self; menu.addItem(loginToggle)
         info = NSMenuItem(title: "วันนี้: พิมพ์ 0 คำ · แก้ให้ 0 · ย้อน 0", action: nil, keyEquivalent: ""); info.isEnabled = false; menu.addItem(info)
         modelInfo = NSMenuItem(title: "โมเดล: ทั่วไป", action: nil, keyEquivalent: ""); modelInfo.isEnabled = false; menu.addItem(modelInfo)
         menu.addItem(.separator()); clearItem = NSMenuItem(title: "ล้างคำที่ตั้งไม่ให้แปลง", action: #selector(clearNever), keyEquivalent: ""); clearItem.target = self; menu.addItem(clearItem); reportItem = NSMenuItem(title: "แจ้งปัญหา…", action: #selector(showReport), keyEquivalent: ""); reportItem.target = self; menu.addItem(reportItem); add(menu,"เปิดโฟลเดอร์ข้อมูล",#selector(openData)); add(menu,"ตั้งค่าสิทธิ์ Accessibility…",#selector(openPrivacy)); menu.addItem(.separator()); add(menu,"ออก",#selector(quit)); status.menu = menu; menuWillOpen(menu)
@@ -52,6 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         info.title = "วันนี้: พิมพ์ \(counts.0) คำ · แก้ให้ \(counts.1) · ย้อน \(counts.2)"
         toggle.state = (store.settings["enabled"] as? Bool ?? true) ? .on : .off
         selectionToggle.state = (store.settings["selectionHotkey"] as? Bool ?? true) ? .on : .off
+        loginToggle.state = SMAppService.mainApp.status == .enabled ? .on : .off
         clearItem.title = "ล้างคำที่ตั้งไม่ให้แปลง (\(tracker.never.count))"; clearItem.isEnabled = !tracker.never.isEmpty
         let resource = Bundle.main.resourceURL ?? URL(fileURLWithPath: "."); let personal = store.models(bundleResources: resource).path.contains("Application Support"); modelInfo.title = personal ? "โมเดล: ส่วนตัว" : "โมเดล: ทั่วไป"
     }
@@ -67,6 +71,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     @objc private func toggleEnabled() { let value = !(store.settings["enabled"] as? Bool ?? true); store.settings["enabled"] = value; store.saveSettings(); tap.enabled = value; if !value { _ = tracker.handle(.reset) }; menuWillOpen(status.menu!) }
     @objc private func toggleSelectionHotkey() { store.settings["selectionHotkey"] = !(store.settings["selectionHotkey"] as? Bool ?? true); store.saveSettings(); menuWillOpen(status.menu!) }
+    // Opening at login is the app's own job (on unless turned off in the menu). A login item added by hand follows the
+    // copy it was added for: an update that moved the old copy to the Trash left it pointing there, macOS does not open
+    // apps from the Trash, and KeyFlip silently stopped starting after a restart (2026-11-13). So a copy installed in
+    // Applications registers itself again whenever its path or version differs from the last registration.
+    private var loginStamp: String { Bundle.main.bundlePath + "|" + (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "") }
+    private func syncLoginItem() {
+        let path = Bundle.main.bundlePath, state = SMAppService.mainApp.status
+        guard store.settings["openAtLogin"] as? Bool ?? true,
+              path.hasPrefix("/Applications/") || path.hasPrefix(NSHomeDirectory() + "/Applications/"),   // not a copy in Downloads, the Trash or a build folder
+              state != .requiresApproval else { return }   // switched off in System Settings: that choice wins
+        if store.settings["loginItem"] as? String == loginStamp {   // this very copy registered itself before
+            if state != .enabled { store.settings["openAtLogin"] = false; store.saveSettings() }   // removed in System Settings since: keep it off
+            return
+        }
+        setLoginItem(true)
+    }
+    private func setLoginItem(_ on: Bool) {
+        let service = SMAppService.mainApp
+        func finish() {
+            if on, service.status == .enabled { store.settings["loginItem"] = loginStamp } else { store.settings.removeValue(forKey: "loginItem") }
+            store.saveSettings(); if let menu = status.menu { menuWillOpen(menu) }
+        }
+        func register() { do { try service.register() } catch { store.debug("login item register failed: \(error)") }; finish() }
+        guard service.status == .enabled else { if on { register() } else { finish() }; return }
+        // Unregister first even when turning it on (the old entry may point at another copy), and register only once
+        // the unregister has finished: it completes asynchronously.
+        service.unregister { error in DispatchQueue.main.async { if let error { self.store.debug("login item unregister failed: \(error)") }; if on { register() } else { finish() } } }
+    }
+    @objc private func toggleLogin() {
+        let on = SMAppService.mainApp.status != .enabled
+        store.settings["openAtLogin"] = on; setLoginItem(on)
+        if on, SMAppService.mainApp.status == .requiresApproval { SMAppService.openSystemSettingsLoginItems() }
+    }
     @objc private func clearNever() { tracker.clearNever(); store.clearNever(); storedNever = [] }
     @objc private func showReport() {
         let resources = Bundle.main.resourceURL ?? URL(fileURLWithPath: ".")

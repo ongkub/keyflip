@@ -15,6 +15,9 @@ pub struct Settings {
     pub enabled: bool,
     #[serde(default = "selection_default")]
     pub selection_hotkey: bool,
+    #[serde(default = "autostart_default")]
+    pub start_with_windows: bool,
+    pub autostart_command: Option<String>,
     pub models_dir: Option<PathBuf>,
     pub delete_mode: String,
     pub undo_shift_tap_ms: u64,
@@ -25,6 +28,9 @@ pub struct Settings {
 fn selection_default() -> bool {
     true
 }
+fn autostart_default() -> bool {
+    true
+}
 pub fn selection_hotkey_matches(vk: u32, down: bool, ctrl: bool, alt: bool, win: bool) -> bool {
     vk == 0x20 && down && ctrl && alt && !win
 }
@@ -33,6 +39,8 @@ impl Default for Settings {
         Self {
             enabled: true,
             selection_hotkey: true,
+            start_with_windows: true,
+            autostart_command: None,
             models_dir: None,
             delete_mode: "scalar".into(),
             undo_shift_tap_ms: 400,
@@ -278,6 +286,19 @@ mod tests {
                 .unwrap()
                 .selection_hotkey
         );
+    }
+    #[test]
+    fn autostart_settings_defaults_and_roundtrips() {
+        let old: Settings = serde_json::from_str(r#"{"enabled":false}"#).unwrap();
+        assert!(old.start_with_windows);
+        assert_eq!(old.autostart_command, None);
+        let mut settings = old;
+        settings.start_with_windows = false;
+        settings.autostart_command = Some(r#""C:\KeyFlip\keyflip.exe""#.into());
+        let loaded: Settings =
+            serde_json::from_str(&serde_json::to_string(&settings).unwrap()).unwrap();
+        assert!(!loaded.start_with_windows);
+        assert_eq!(loaded.autostart_command, settings.autostart_command);
     }
     #[test]
     fn partial_settings_models_and_corrupt_files() {

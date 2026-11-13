@@ -36,12 +36,14 @@ pub const STOP: u32 = WM_APP + 4;
 pub const SELECT_CONVERT: u32 = WM_APP + 5;
 pub const SELECT_COUNT: u32 = WM_APP + 7;
 pub const SELECTION_TOGGLE: u32 = WM_APP + 6;
+pub const AUTOSTART_TOGGLE: u32 = WM_APP + 8;
 static SPACE_HELD: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 #[derive(Default, Clone)]
 pub struct Snapshot {
     pub enabled: bool,
     pub selection_enabled: bool,
+    pub autostart: bool,
     pub counts: (u64, u64, u64),
     pub day: String,
     pub never: usize,
@@ -52,6 +54,7 @@ enum Save {
     Record(Vec<TrackerEvent>, Vec<String>, String),
     Enabled(bool),
     Selection(bool),
+    Autostart(bool),
     SelectionCount,
     Clear,
 }
@@ -74,6 +77,19 @@ fn storage(mut store: Store, shared: Shared) -> (Sender<Save>, JoinHandle<()>) {
                 Save::Selection(enabled) => {
                     store.settings.selection_hotkey = enabled;
                     store.save_settings()
+                }
+                Save::Autostart(enabled) => {
+                    let result = crate::autostart::set(&mut store.settings, enabled)
+                        .and_then(|()| store.save_settings().map_err(|e| e.to_string()));
+                    let mut snapshot = shared.lock().unwrap();
+                    snapshot.autostart = crate::autostart::active();
+                    snapshot.day = store::timestamp(store::now()).0;
+                    snapshot.counts = store.counts(&snapshot.day);
+                    snapshot.never = store.never.len();
+                    if let Err(error) = result {
+                        snapshot.notice = Some(format!("ตั้งค่าเปิดพร้อมเครื่องไม่สำเร็จ: {error}"));
+                    }
+                    continue;
                 }
                 Save::SelectionCount => {
                     let day = store::timestamp(store::now()).0;
@@ -539,6 +555,10 @@ pub fn start(store: Store, shared: Shared) -> Result<Hook, String> {
                             s.selection_enabled = !s.selection_enabled;
                             let _ = s.save.send(Save::Selection(s.selection_enabled));
                             shared.lock().unwrap().selection_enabled = s.selection_enabled;
+                        }
+                        AUTOSTART_TOGGLE => {
+                            let enabled = !shared.lock().unwrap().autostart;
+                            let _ = s.save.send(Save::Autostart(enabled));
                         }
                         CLEAR => {
                             s.reset();

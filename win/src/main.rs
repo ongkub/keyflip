@@ -1,6 +1,7 @@
 #![cfg_attr(all(windows, not(test)), windows_subsystem = "windows")]
 // Pure modules are also compiled by `cargo test` on macOS.
 #![cfg_attr(not(windows), allow(dead_code))]
+mod autostart;
 mod exclude;
 #[cfg(windows)]
 mod hook;

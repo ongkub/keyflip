@@ -24,6 +24,7 @@ use windows::{
 const CALLBACK: u32 = WM_APP + 20;
 const TOGGLE: usize = 1;
 const SELECTION_TOGGLE: usize = 7;
+const AUTOSTART_TOGGLE: usize = 8;
 const CLEAR: usize = 2;
 const OPEN: usize = 3;
 const EXIT: usize = 4;
@@ -456,6 +457,17 @@ unsafe fn menu(hwnd: HWND, thread_id: u32, root: PathBuf, mut snapshot: Snapshot
         SELECTION_TOGGLE,
         w!("แปลงข้อความที่เลือก (Ctrl+Alt+Space)"),
     );
+    let autostart_checked = if snapshot.autostart {
+        MF_CHECKED
+    } else {
+        MF_UNCHECKED
+    };
+    let _ = AppendMenuW(
+        menu,
+        MF_STRING | autostart_checked,
+        AUTOSTART_TOGGLE,
+        w!("เปิดพร้อมเครื่อง"),
+    );
     let info = wide(&format!(
         "วันนี้: พิมพ์ {} คำ · แก้ให้ {} · ย้อน {}",
         snapshot.counts.0, snapshot.counts.1, snapshot.counts.2
@@ -499,6 +511,9 @@ unsafe fn menu(hwnd: HWND, thread_id: u32, root: PathBuf, mut snapshot: Snapshot
         }
         SELECTION_TOGGLE => {
             let _ = PostThreadMessageW(thread_id, hook::SELECTION_TOGGLE, WPARAM(0), LPARAM(0));
+        }
+        AUTOSTART_TOGGLE => {
+            let _ = PostThreadMessageW(thread_id, hook::AUTOSTART_TOGGLE, WPARAM(0), LPARAM(0));
         }
         CLEAR => {
             let _ = PostThreadMessageW(thread_id, hook::CLEAR, WPARAM(0), LPARAM(0));
@@ -613,7 +628,10 @@ pub fn run() -> Result<(), String> {
             return Ok(());
         }
         let root = store::data_root(std::env::var_os("APPDATA").ok_or("ไม่พบโฟลเดอร์ APPDATA")?);
-        let store = Store::open(root.clone()).map_err(|e| e.to_string())?;
+        let mut store = Store::open(root.clone()).map_err(|e| e.to_string())?;
+        if crate::autostart::sync(&mut store.settings) {
+            let _ = store.save_settings();
+        }
         let model = if root.join("models/th.kfm").is_file() && root.join("models/en.kfm").is_file()
         {
             "personal"
@@ -640,6 +658,7 @@ pub fn run() -> Result<(), String> {
         let shared = Arc::new(Mutex::new(Snapshot {
             enabled: store.settings.enabled,
             selection_enabled: store.settings.selection_hotkey,
+            autostart: crate::autostart::active(),
             counts: store.counts(&store::timestamp(store::now()).0),
             day: store::timestamp(store::now()).0,
             never: store.never.len(),

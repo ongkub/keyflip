@@ -35,11 +35,20 @@ pub fn decide(
     disabled: bool,
     in_temp: bool,
 ) -> Decision {
-    if !wanted || in_temp {
+    if in_temp {
         return Decision::Skip;
     }
     if disabled {
-        return Decision::Disable;
+        return if wanted {
+            Decision::Disable
+        } else {
+            Decision::Skip
+        };
+    }
+    // Off in our settings but an enabled Run value exists: the user switched it back on in Task Manager
+    // (turning it off from our menu deletes the value), so manage it again and follow this exe.
+    if !wanted && run.is_none() {
+        return Decision::Skip;
     }
     if stamp == Some(command) {
         return if run == Some(command) {
@@ -227,6 +236,7 @@ mod windows_registry {
                 true
             }
             Decision::Record => {
+                settings.start_with_windows = true;
                 settings.autostart_command = Some(cmd);
                 true
             }
@@ -234,6 +244,7 @@ mod windows_registry {
                 if write(RUN, NAME, &reg_sz(&cmd), REG_SZ).is_err() {
                     return false;
                 }
+                settings.start_with_windows = true;
                 settings.autostart_command = Some(cmd);
                 true
             }
@@ -275,6 +286,16 @@ mod tests {
     fn decisions() {
         let c = "\"C:\\KeyFlip\\keyflip.exe\"";
         assert_eq!(decide(false, None, c, None, false, false), Decision::Skip);
+        // re-enabled in Task Manager after it was disabled there: manage it again
+        assert_eq!(
+            decide(false, None, c, Some(c), false, false),
+            Decision::Record
+        );
+        assert_eq!(
+            decide(false, None, c, Some("old"), false, false),
+            Decision::Write
+        );
+        assert_eq!(decide(false, None, c, Some(c), true, false), Decision::Skip);
         assert_eq!(decide(true, None, c, None, false, true), Decision::Skip);
         assert_eq!(decide(true, None, c, None, true, false), Decision::Disable);
         assert_eq!(

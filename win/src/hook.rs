@@ -81,8 +81,9 @@ fn storage(mut store: Store, shared: Shared) -> (Sender<Save>, JoinHandle<()>) {
                 Save::Autostart(enabled) => {
                     let result = crate::autostart::set(&mut store.settings, enabled)
                         .and_then(|()| store.save_settings().map_err(|e| e.to_string()));
+                    let active = crate::autostart::active(); // registry read outside the shared lock
                     let mut snapshot = shared.lock().unwrap();
-                    snapshot.autostart = crate::autostart::active();
+                    snapshot.autostart = active;
                     snapshot.day = store::timestamp(store::now()).0;
                     snapshot.counts = store.counts(&snapshot.day);
                     snapshot.never = store.never.len();
